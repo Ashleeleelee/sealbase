@@ -1,13 +1,53 @@
 import { useState, useRef } from "react";
 import T from "../utils/tokens";
 
+// 省份 → 城市映射（仅收录有水族馆/海洋公园/救助机构的真实城市）
+const PROVINCE_CITY_MAP = {
+  "辽宁": ["大连", "沈阳", "营口", "盘锦", "葫芦岛", "其他"],
+  "黑龙江": ["哈尔滨", "其他"],
+  "吉林": ["长春", "其他"],
+  "北京": ["北京"],
+  "天津": ["天津"],
+  "河北": ["石家庄", "秦皇岛", "唐山", "其他"],
+  "山东": ["青岛", "济南", "烟台", "威海", "日照", "其他"],
+  "上海": ["上海"],
+  "江苏": ["南京", "苏州", "南通", "连云港", "其他"],
+  "浙江": ["杭州", "宁波", "温州", "舟山", "其他"],
+  "福建": ["福州", "厦门", "其他"],
+  "广东": ["广州", "深圳", "珠海", "其他"],
+  "海南": ["三亚", "海口", "其他"],
+  "重庆": ["重庆"],
+  "四川": ["成都", "其他"],
+  "陕西": ["西安", "其他"],
+  "湖北": ["武汉", "其他"],
+  "湖南": ["长沙", "其他"],
+  "河南": ["郑州", "其他"],
+  "新疆": ["乌鲁木齐", "其他"],
+  "内蒙古": ["呼和浩特", "其他"],
+  "其他省份": ["其他"],
+};
+
+const PROVINCES = Object.keys(PROVINCE_CITY_MAP);
+
 export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
-  const [form, setForm] = useState({ name: "", facility: "", city: "", province: "", sex: "未知", status: "圈养展示", source: "", arrivedYear: "", notes: "", releaseDate: "", releaseLocation: "", steward: "" });
+  const [form, setForm] = useState({
+    name: "", facility: "", city: "", province: "",
+    sex: "未知", status: "圈养展示", source: "",
+    arrivedYear: "", notes: "", releaseDate: "",
+    releaseLocation: "", steward: "", sourceRef: ""
+  });
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
   const [dupWarn, setDupWarn] = useState(null);
   const imgRef = useRef();
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onProvinceChange = (v) => {
+    set("province", v);
+    set("city", "");
+  };
+
+  const availableCities = form.province ? PROVINCE_CITY_MAP[form.province] || [] : [];
 
   const onNameChange = (v) => {
     set("name", v);
@@ -18,25 +58,23 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
     setDupWarn(existingSeals.find(s => s.name === v) || null);
   };
 
-  const inp = { width: "100%", border: `1.5px solid ${T.border}`, borderRadius: 7, padding: "9px 12px", color: T.ink, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit", background: "white" };
+  const inp = {
+    width: "100%", border: `1.5px solid ${T.border}`, borderRadius: 7,
+    padding: "9px 12px", color: T.ink, fontSize: 13, outline: "none",
+    boxSizing: "border-box", fontFamily: "inherit", background: "white"
+  };
+  const inpDisabled = { ...inp, background: T.bg, color: T.faint, cursor: "not-allowed" };
   const lbl = { color: T.body, fontSize: 11.5, display: "block", marginBottom: 5, fontWeight: 600 };
   const ok = form.name && form.facility && form.sourceRef;
 
   const handleSubmit = () => {
     if (!ok) return;
     onSubmit({
-      name: form.name,
-      sex: form.sex,
-      facility: form.facility,
-      city: form.city,
-      province: form.province,
-      status: form.status,
-      source: form.source,
-      arrived_year: form.arrivedYear,
-      notes: form.notes,
-      release_date: form.releaseDate,
-      release_location: form.releaseLocation,
-      data_quality: "待核实",
+      name: form.name, sex: form.sex, facility: form.facility,
+      city: form.city, province: form.province, status: form.status,
+      source: form.source, arrived_year: form.arrivedYear, notes: form.notes,
+      release_date: form.releaseDate, release_location: form.releaseLocation,
+      source_ref: form.sourceRef, data_quality: "待核实",
     });
     onClose();
   };
@@ -83,16 +121,31 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             )}
           </div>
 
-          {/* 园区 + 城市 */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div><label style={lbl}>所在园区 *</label><input value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="机构全名" style={inp} /></div>
-            <div><label style={lbl}>城市</label><input value={form.city} onChange={e => set("city", e.target.value)} placeholder="如：大连" style={inp} /></div>
+          {/* 所在园区 */}
+          <div>
+            <label style={lbl}>所在园区 *</label>
+            <input value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="机构全名，如：大连圣亚海洋世界" style={inp} />
           </div>
 
-          {/* 省份 */}
-          <div>
-            <label style={lbl}>省份</label>
-            <input value={form.province} onChange={e => set("province", e.target.value)} placeholder="如：辽宁" style={inp} />
+          {/* 省份 → 城市 联动 */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={lbl}>省份 / 直辖市</label>
+              <select value={form.province} onChange={e => onProvinceChange(e.target.value)} style={inp}>
+                <option value="">请选择省份…</option>
+                {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ ...lbl, color: form.province ? T.body : T.faint }}>城市</label>
+              <select value={form.city} onChange={e => set("city", e.target.value)} disabled={!form.province} style={form.province ? inp : inpDisabled}>
+                <option value="">{form.province ? "请选择城市…" : "请先选择省份"}</option>
+                {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {form.province && (
+                <div style={{ color: T.faint, fontSize: 10.5, marginTop: 3 }}>仅列出已知有相关机构的城市</div>
+              )}
+            </div>
           </div>
 
           {/* 性别 + 状态 */}
@@ -111,7 +164,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             </div>
           </div>
 
-          {/* 放归字段（条件显示） */}
+          {/* 放归字段 */}
           {form.status === "已放归" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, background: T.greenPale, padding: 12, borderRadius: 8, border: `1px solid #6EE7B060` }}>
               <div><label style={{ ...lbl, color: T.green }}>放归时间</label><input value={form.releaseDate} onChange={e => set("releaseDate", e.target.value)} placeholder="如：2025-04-16" style={inp} /></div>
@@ -125,7 +178,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             <div><label style={lbl}>入馆年份</label><input value={form.arrivedYear} onChange={e => set("arrivedYear", e.target.value)} placeholder="如：2021" style={inp} /></div>
           </div>
 
-          {/* 图片上传（占位） */}
+          {/* 图片上传 */}
           <div>
             <label style={lbl}>上传图片（可多张）</label>
             <div onClick={() => imgRef.current && imgRef.current.click()}
@@ -155,8 +208,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           </div>
 
           {/* 提交按钮 */}
-          <button
-            onClick={handleSubmit}
+          <button onClick={handleSubmit}
             style={{ background: ok ? T.teal : "#BAE6FD", border: "none", borderRadius: 8, padding: 13, color: "white", fontSize: 14, fontWeight: 700, cursor: ok ? "pointer" : "default", fontFamily: "inherit", marginTop: 4 }}>
             提交审核
           </button>

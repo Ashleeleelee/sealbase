@@ -1,7 +1,7 @@
 import { useState } from "react";
 import T from "../utils/tokens";
 
-export default function Nav({ view, setView, certified, onContribute }) {
+export default function Nav({ view, setView, certified, onContribute, onDaily }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = [["records", "个体记录"], ["facilities", "饲养机构"], ["about", "关于项目"]];
 
@@ -32,6 +32,18 @@ export default function Nav({ view, setView, certified, onContribute }) {
               padding: "5px 13px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit",
             }}>{l}</button>
           ))}
+          <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.15)", margin: "0 5px" }} />
+          {/* 今日一豹 — 桌面端 */}
+          <button onClick={onDaily} style={{
+            background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 6, padding: "5px 13px", color: "rgba(255,255,255,0.75)",
+            fontSize: 12.5, cursor: "pointer", fontFamily: "inherit",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.75)"; }}
+          >
+            🦭 今日一豹
+          </button>
           <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.15)", margin: "0 5px" }} />
           <button onClick={onContribute} style={{
             background: T.teal, border: "none", borderRadius: 6, padding: "6px 14px",
@@ -77,6 +89,14 @@ export default function Nav({ view, setView, certified, onContribute }) {
               fontSize: 13.5, padding: "13px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
             }}>{l}</button>
           ))}
+          {/* 今日一豹 — 手机端 */}
+          <button onClick={() => { onDaily(); setMenuOpen(false); }} style={{
+            display: "block", width: "100%",
+            background: "transparent",
+            border: "none", borderLeft: "3px solid transparent",
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 13.5, padding: "13px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+          }}>🦭 今日一豹</button>
           <div style={{ margin: "8px 16px 4px" }}>
             <button onClick={() => { onContribute(); setMenuOpen(false); }} style={{
               background: T.teal, border: "none", borderRadius: 8, padding: "11px 0",
