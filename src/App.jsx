@@ -10,6 +10,7 @@ import ContributeModal from "./components/ContributeModal";
 import SpeciesPanel    from "./components/SpeciesPanel";
 import DailyModal      from "./components/DailyModal";
 import StatsCharts     from "./components/StatsCharts";
+import ShareModal      from "./components/ShareModal";
 import { supabase }    from "./lib/supabase";
 
 export default function App() {
@@ -20,26 +21,19 @@ export default function App() {
   const [showQuiz, setShowQuiz]             = useState(false);
   const [showContribute, setShowContribute] = useState(false);
   const [showDaily, setShowDaily]           = useState(false);
+  const [shareSeal, setShareSeal]           = useState(null);
   const [certified, setCertified]           = useState(false);
   const [toast, setToast]                   = useState(null);
   const [search, setSearch]                 = useState("");
 
-  // 启动时从 Supabase 拉取数据
-  useEffect(() => {
-    fetchSeals();
-  }, []);
+  useEffect(() => { fetchSeals(); }, []);
 
   const fetchSeals = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("seals")
-      .select("*")
-      .order("id", { ascending: false });
-    if (error) {
-      console.error("拉取数据失败:", error);
-    } else {
-      setSeals(data || []);
-    }
+      .from("seals").select("*").order("id", { ascending: false });
+    if (error) console.error("拉取数据失败:", error);
+    else setSeals(data || []);
     setLoading(false);
   };
 
@@ -47,10 +41,7 @@ export default function App() {
 
   const handleSubmit = async (record) => {
     const { data, error } = await supabase
-      .from("seals")
-      .insert([record])
-      .select()
-      .single();
+      .from("seals").insert([record]).select().single();
     if (error) {
       console.error("提交失败:", error);
       pushToast("✗ 提交失败，请稍后重试。");
@@ -86,6 +77,7 @@ export default function App() {
       {showQuiz && <QuizModal onPass={() => { setCertified(true); setShowQuiz(false); setShowContribute(true); }} onClose={() => setShowQuiz(false)} />}
       {showContribute && <ContributeModal onClose={() => setShowContribute(false)} onSubmit={handleSubmit} existingSeals={seals} />}
       {showDaily && <DailyModal seals={seals} onClose={() => setShowDaily(false)} onViewSeal={handleViewDailySeal} />}
+      {shareSeal && <ShareModal seal={shareSeal} onClose={() => setShareSeal(null)} />}
 
       <Nav view={view} setView={setView} certified={certified} onContribute={onContribute} onDaily={() => setShowDaily(true)} />
       <Hero seals={seals} />
@@ -141,7 +133,7 @@ export default function App() {
                 )}
               </div>
             </div>
-            <SealDetail seal={selected} onClose={() => setSelected(null)} />
+            <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} />
           </div>
         )}
 
@@ -193,6 +185,7 @@ export default function App() {
                   ["📋 园区认领", "志愿者可认领园区，成为数据负责人，提升可信度"],
                   ["🦭 今日一豹", "按日期哈希每天推送一只，同一天所有访客看到同一只"],
                   ["📊 数据统计", "饲养机构页展示园区数量、性别比例、状态分布等图表"],
+                  ["🪄 分享名片", "为每只海豹生成精美分享卡片，4种风格×2种比例"],
                 ].map(([t, d]) => (
                   <div key={t} style={{ padding: "10px 14px", background: T.bg, borderRadius: 8 }}>
                     <div style={{ color: T.ink, fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}>{t}</div>

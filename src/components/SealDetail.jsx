@@ -4,7 +4,7 @@ import { StatusPill, QualityBadge, FieldRow } from "./Badges";
 import ImageGallery from "./ImageGallery";
 import Timeline from "./Timeline";
 
-export default function SealDetail({ seal, onClose }) {
+export default function SealDetail({ seal, onClose, onShare }) {
   const [tab, setTab] = useState("info");
 
   const tabBtn = (id, label, badge) => (
@@ -54,20 +54,28 @@ export default function SealDetail({ seal, onClose }) {
               <FieldRow label="饲养机构" value={seal.facility} />
               <FieldRow label="所在城市" value={[seal.city, seal.province].filter(Boolean).join("，")} />
               <FieldRow label="个体来源" value={seal.source} />
-              <FieldRow label="入馆年份" value={seal.arrivedYear} />
+              <FieldRow label="入馆年份" value={seal.arrived_year} />
               <FieldRow label="芯片编号" value={seal.microchip} />
-              {seal.status === "已放归" && <FieldRow label="放归时间" value={seal.releaseDate} />}
-              {seal.status === "已放归" && <FieldRow label="放归地点" value={seal.releaseLocation} />}
+              {seal.status === "已放归" && <FieldRow label="放归时间" value={seal.release_date} />}
+              {seal.status === "已放归" && <FieldRow label="放归地点" value={seal.release_location} />}
             </div>
             <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, padding: "12px 14px", marginBottom: 10 }}>
               <p style={{ color: T.body, fontSize: 12.5, lineHeight: 1.8, margin: 0 }}>{seal.notes || "暂无备注"}</p>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ color: T.faint, fontSize: 11 }}>来源：{seal.sourceRef || "—"}</span>
-              <QualityBadge q={seal.dataQuality} />
+              <span style={{ color: T.faint, fontSize: 11 }}>来源：{seal.source_ref || "—"}</span>
+              <QualityBadge q={seal.data_quality} />
             </div>
-            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
+            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ color: T.faint, fontSize: 11 }}>最近更新：{seal.lastUpdated || "—"}</span>
+              <button onClick={() => onShare && onShare(seal)} style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "white", border: `1.5px solid ${T.teal}`, borderRadius: 7,
+                padding: "6px 14px", color: T.teal, fontSize: 12, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit"
+              }}>
+                🪄 分享名片
+              </button>
             </div>
           </div>
         )}

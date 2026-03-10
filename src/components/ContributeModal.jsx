@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import T from "../utils/tokens";
+import { supabase } from "../lib/supabase";
 
-// 省份 → 城市映射（仅收录有水族馆/海洋公园/救助机构的真实城市）
 const PROVINCE_CITY_MAP = {
   "辽宁": ["大连", "沈阳", "营口", "盘锦", "葫芦岛", "其他"],
   "黑龙江": ["哈尔滨", "其他"],
@@ -34,19 +34,18 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
     name: "", facility: "", city: "", province: "",
     sex: "未知", status: "圈养展示", source: "",
     arrivedYear: "", notes: "", releaseDate: "",
-    releaseLocation: "", steward: "", sourceRef: ""
+    releaseLocation: "", sourceRef: ""
   });
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
   const [dupWarn, setDupWarn] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const imgRef = useRef();
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const onProvinceChange = (v) => {
-    set("province", v);
-    set("city", "");
-  };
-
+  const onProvinceChange = (v) => { set("province", v); set("city", ""); };
   const availableCities = form.province ? PROVINCE_CITY_MAP[form.province] || [] : [];
 
   const onNameChange = (v) => {
@@ -58,6 +57,41 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
     setDupWarn(existingSeals.find(s => s.name === v) || null);
   };
 
+  const onImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setImageFiles(prev => [...prev, ...files]);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews(prev => [...prev, ev.target.result]);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async () => {
+    if (!imageFiles.length) return [];
+    const urls = [];
+    for (const file of imageFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from("seal-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) {
+        console.error("图片上传失败:", error);
+        continue;
+      }
+      const { data } = supabase.storage.from("seal-images").getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    return urls;
+  };
+
   const inp = {
     width: "100%", border: `1.5px solid ${T.border}`, borderRadius: 7,
     padding: "9px 12px", color: T.ink, fontSize: 13, outline: "none",
@@ -65,17 +99,21 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
   };
   const inpDisabled = { ...inp, background: T.bg, color: T.faint, cursor: "not-allowed" };
   const lbl = { color: T.body, fontSize: 11.5, display: "block", marginBottom: 5, fontWeight: 600 };
-  const ok = form.name && form.facility && form.sourceRef;
+  const ok = form.name && form.facility && form.sourceRef && !uploading;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!ok) return;
+    setUploading(true);
+    const imageUrls = await uploadImages();
     onSubmit({
       name: form.name, sex: form.sex, facility: form.facility,
       city: form.city, province: form.province, status: form.status,
       source: form.source, arrived_year: form.arrivedYear, notes: form.notes,
       release_date: form.releaseDate, release_location: form.releaseLocation,
       source_ref: form.sourceRef, data_quality: "待核实",
+      images: imageUrls,
     });
+    setUploading(false);
     onClose();
   };
 
@@ -94,7 +132,10 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           {/* 名称 + 去重 */}
           <div style={{ position: "relative" }}>
             <label style={lbl}>个体名称 / 编号 *</label>
-            <input value={form.name} onChange={e => onNameChange(e.target.value)} onBlur={() => setTimeout(() => setShowSug(false), 160)} onFocus={() => suggestions.length && setShowSug(true)} placeholder="中文名 / 编号，如：豹竹、圣亚#A" style={inp} />
+            <input value={form.name} onChange={e => onNameChange(e.target.value)}
+              onBlur={() => setTimeout(() => setShowSug(false), 160)}
+              onFocus={() => suggestions.length && setShowSug(true)}
+              placeholder="中文名 / 编号，如：豹竹、圣亚#A" style={inp} />
             {showSug && (
               <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", border: `1px solid ${T.border}`, borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.1)", zIndex: 10, marginTop: 4, overflow: "hidden" }}>
                 <div style={{ padding: "6px 12px", background: T.amberPale, borderBottom: `1px solid #FDE68A` }}>
@@ -127,7 +168,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             <input value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="机构全名，如：大连圣亚海洋世界" style={inp} />
           </div>
 
-          {/* 省份 → 城市 联动 */}
+          {/* 省份 → 城市联动 */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label style={lbl}>省份 / 直辖市</label>
@@ -142,9 +183,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
                 <option value="">{form.province ? "请选择城市…" : "请先选择省份"}</option>
                 {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              {form.province && (
-                <div style={{ color: T.faint, fontSize: 10.5, marginTop: 3 }}>仅列出已知有相关机构的城市</div>
-              )}
+              {form.province && <div style={{ color: T.faint, fontSize: 10.5, marginTop: 3 }}>仅列出已知有相关机构的城市</div>}
             </div>
           </div>
 
@@ -181,13 +220,29 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           {/* 图片上传 */}
           <div>
             <label style={lbl}>上传图片（可多张）</label>
+            {/* 预览区 */}
+            {imagePreviews.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                {imagePreviews.map((src, i) => (
+                  <div key={i} style={{ position: "relative", width: 72, height: 72 }}>
+                    <img src={src} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: `1px solid ${T.border}` }} />
+                    <button onClick={() => removeImage(i)} style={{
+                      position: "absolute", top: -6, right: -6, width: 18, height: 18,
+                      background: "#EF4444", border: "none", borderRadius: "50%",
+                      color: "white", fontSize: 11, cursor: "pointer", lineHeight: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div onClick={() => imgRef.current && imgRef.current.click()}
-              style={{ border: `1.5px dashed ${T.border}`, borderRadius: 8, padding: 16, textAlign: "center", cursor: "pointer", background: T.bg }}
+              style={{ border: `1.5px dashed ${T.border}`, borderRadius: 8, padding: 14, textAlign: "center", cursor: "pointer", background: T.bg }}
               onMouseEnter={e => e.currentTarget.style.borderColor = T.teal}
               onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
-              <div style={{ color: T.muted, fontSize: 13 }}>点击上传图片</div>
-              <div style={{ color: T.faint, fontSize: 11, marginTop: 3 }}>支持 JPG、PNG，建议每张不超过 5MB（图片存储功能开发中）</div>
-              <input ref={imgRef} type="file" accept="image/*" multiple onChange={() => {}} style={{ display: "none" }} />
+              <div style={{ color: T.muted, fontSize: 13 }}>📷 点击添加图片</div>
+              <div style={{ color: T.faint, fontSize: 11, marginTop: 3 }}>支持 JPG、PNG，每张不超过 5MB</div>
+              <input ref={imgRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onImageChange} style={{ display: "none" }} />
             </div>
           </div>
 
@@ -208,9 +263,9 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           </div>
 
           {/* 提交按钮 */}
-          <button onClick={handleSubmit}
+          <button onClick={handleSubmit} disabled={!ok}
             style={{ background: ok ? T.teal : "#BAE6FD", border: "none", borderRadius: 8, padding: 13, color: "white", fontSize: 14, fontWeight: 700, cursor: ok ? "pointer" : "default", fontFamily: "inherit", marginTop: 4 }}>
-            提交审核
+            {uploading ? "上传图片中…" : "提交审核"}
           </button>
         </div>
       </div>

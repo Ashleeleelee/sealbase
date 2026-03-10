@@ -4,7 +4,7 @@ export default function StatsStrip({ seals, facilities }) {
   const stats = [
     { n: seals.length, label: "个体档案", sub: "含待核实条目" },
     { n: seals.filter(s => s.dataQuality === "已核实（官方报道）").length, label: "已核实", sub: "有官方来源支撑" },
-    { n: seals.filter(s => s.images && s.images.length > 0).length, label: "有图片记录", sub: "含照片个体" },
+    { n: seals.filter(s => Array.isArray(s.images) && s.images.some(url => url && url.startsWith("http"))).length, label: "有图片记录", sub: "含照片个体" },
     { n: facilities.filter(f => f.steward).length, label: "园区已认领", sub: "有数据负责人" },
   ];
   return (

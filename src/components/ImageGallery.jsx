@@ -1,7 +1,8 @@
 import { useState } from "react";
 import T from "../utils/tokens";
 
-export default function ImageGallery({ images }) {
+export default function ImageGallery({ images: rawImages }) {
+  const images = Array.isArray(rawImages) ? rawImages : (rawImages ? [rawImages] : []);
   const [active, setActive] = useState(0);
   if (!images || images.length === 0) {
     return (
