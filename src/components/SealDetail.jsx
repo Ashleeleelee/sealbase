@@ -4,8 +4,9 @@ import { StatusPill, QualityBadge, FieldRow } from "./Badges";
 import ImageGallery from "./ImageGallery";
 import Timeline from "./Timeline";
 
-export default function SealDetail({ seal, onClose, onShare, isDrawer = false }) {
+export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer = false }) {
   const [tab, setTab] = useState("info");
+  const [confirming, setConfirming] = useState(false);
 
   const tabBtn = (id, label, badge) => (
     <button onClick={() => setTab(id)} style={{ background: "none", border: "none", borderBottom: tab === id ? `2px solid ${T.teal}` : "2px solid transparent", padding: "8px 14px 9px", marginBottom: -1, color: tab === id ? T.teal : T.muted, fontSize: 12.5, fontWeight: tab === id ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>
@@ -23,6 +24,16 @@ export default function SealDetail({ seal, onClose, onShare, isDrawer = false })
   }
 
   if (!seal) return null;
+
+  const confirmations = seal.confirmations || 0;
+  const isVerified = seal.data_quality === "已核实（官方报道）";
+
+  const handleConfirm = async () => {
+    if (!onConfirm || confirming || isVerified) return;
+    setConfirming(true);
+    await onConfirm(seal);
+    setConfirming(false);
+  };
 
   const content = (
     <>
@@ -66,13 +77,45 @@ export default function SealDetail({ seal, onClose, onShare, isDrawer = false })
             <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, padding: "12px 14px", marginBottom: 10 }}>
               <p style={{ color: T.body, fontSize: 12.5, lineHeight: 1.8, margin: 0 }}>{seal.notes || "暂无备注"}</p>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ color: T.faint, fontSize: 11 }}>来源：{seal.source_ref || "—"}</span>
-              <QualityBadge q={seal.data_quality} />
+
+            {/* 数据质量 + 核实进度 */}
+            <div style={{ background: isVerified ? T.greenPale : T.amberPale, border: `1px solid ${isVerified ? "#6EE7B7" : "#FDE68A"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <QualityBadge q={seal.data_quality} />
+                <span style={{ color: T.faint, fontSize: 11 }}>来源：{seal.source_ref || "—"}</span>
+              </div>
+              {!isVerified && (
+                <>
+                  {/* 核实进度条 */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ color: T.body, fontSize: 11 }}>社区核实进度</span>
+                      <span style={{ color: T.amber, fontSize: 11, fontWeight: 600 }}>{confirmations} / 3 人确认</span>
+                    </div>
+                    <div style={{ height: 4, background: "rgba(0,0,0,0.08)", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(confirmations / 3 * 100, 100)}%`, background: T.amber, borderRadius: 99, transition: "width 0.4s" }} />
+                    </div>
+                  </div>
+                  <div style={{ color: "#78350F", fontSize: 11, lineHeight: 1.6 }}>
+                    累计 3 人确认后，数据将自动升级为「已核实」
+                  </div>
+                </>
+              )}
+              {isVerified && (
+                <div style={{ color: "#065F46", fontSize: 11.5, marginTop: 2 }}>✓ 此记录已通过社区核实</div>
+              )}
             </div>
-            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: T.faint, fontSize: 11 }}>最近更新：{seal.lastUpdated || "—"}</span>
-              <button onClick={() => onShare && onShare(seal)} style={{ display: "flex", alignItems: "center", gap: 5, background: "white", border: `1.5px solid ${T.teal}`, borderRadius: 7, padding: "6px 14px", color: T.teal, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+
+            {/* 操作按钮行 */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {!isVerified && onConfirm && (
+                <button onClick={handleConfirm} disabled={confirming}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: confirming ? T.bg : T.greenPale, border: `1.5px solid ${confirming ? T.border : "#6EE7B7"}`, borderRadius: 7, padding: "7px 12px", color: confirming ? T.faint : "#065F46", fontSize: 12, fontWeight: 700, cursor: confirming ? "default" : "pointer", fontFamily: "inherit" }}>
+                  {confirming ? "提交中…" : `✓ 确认此记录（${confirmations}/3）`}
+                </button>
+              )}
+              <button onClick={() => onShare && onShare(seal)}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "white", border: `1.5px solid ${T.teal}`, borderRadius: 7, padding: "7px 14px", color: T.teal, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                 🪄 分享名片
               </button>
             </div>

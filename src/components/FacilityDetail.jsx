@@ -34,7 +34,7 @@ function ScoreRow({ label, value, count }) {
   );
 }
 
-export default function FacilityDetail({ facility, seals, onClose, isMobile }) {
+export default function FacilityDetail({ facility, seals, onClose, onViewSeal, isMobile }) {
   const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showObserveModal, setShowObserveModal] = useState(false);
@@ -223,7 +223,10 @@ export default function FacilityDetail({ facility, seals, onClose, isMobile }) {
               <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 8, overflow: "hidden" }}>
                 {facilitySeals.map((s, i) => (
                   <div key={s.id}
-                    style={{ padding: "12px 14px", borderBottom: i < facilitySeals.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 10 }}>
+                    onClick={() => onViewSeal && onViewSeal(s)}
+                    onMouseEnter={e => { if (onViewSeal) e.currentTarget.style.background = '#F0FDFF'; }}
+                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                    style={{ padding: "12px 14px", borderBottom: i < facilitySeals.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 10, cursor: onViewSeal ? 'pointer' : 'default' }}>
                     <div style={{ width: 38, height: 38, borderRadius: 6, overflow: "hidden", flexShrink: 0, background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {s.images && Array.isArray(s.images) && s.images[0]?.startsWith("http")
                         ? <img src={s.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
