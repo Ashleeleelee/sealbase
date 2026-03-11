@@ -131,11 +131,19 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* 名称 + 去重 */}
           <div style={{ position: "relative" }}>
-            <label style={lbl}>个体名称 / 编号 *</label>
-            <input value={form.name} onChange={e => onNameChange(e.target.value)}
-              onBlur={() => setTimeout(() => setShowSug(false), 160)}
-              onFocus={() => suggestions.length && setShowSug(true)}
-              placeholder="中文名 / 编号，如：豹竹、圣亚#A" style={inp} />
+          <label style={lbl}>个体名称 / 编号 *</label>
+<input value={form.name} onChange={e => onNameChange(e.target.value)}
+  onBlur={() => setTimeout(() => setShowSug(false), 160)}
+  onFocus={() => suggestions.length && setShowSug(true)}
+  placeholder="如：豆豆 / LHT-2023-01" style={inp} />
+<div style={{ marginTop: 5, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "8px 10px" }}>
+  <div style={{ color: T.body, fontSize: 11, fontWeight: 600, marginBottom: 3 }}>📋 命名规范</div>
+  <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>
+    · 有官方名：直接填写，来源注明「机构官方」<br />
+    · 无官方名：填写编号格式 <span style={{ fontFamily: "monospace", background: "white", padding: "0 4px", borderRadius: 3, border: `1px solid ${T.border}` }}>机构缩写-年份-序号</span><br />
+    · 示例：<span style={{ fontFamily: "monospace" }}>LHT-2023-01</span>（老虎滩2023年第1只）、<span style={{ fontFamily: "monospace" }}>SY-2021-03</span>（圣亚2021年第3只）
+  </div>
+</div>
             {showSug && (
               <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", border: `1px solid ${T.border}`, borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.1)", zIndex: 10, marginTop: 4, overflow: "hidden" }}>
                 <div style={{ padding: "6px 12px", background: T.amberPale, borderBottom: `1px solid #FDE68A` }}>
@@ -249,7 +257,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           {/* 备注 */}
           <div>
             <label style={lbl}>备注 / 说明</label>
-            <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={3} placeholder="个体特征、外貌、已知历史等…" style={{ ...inp, resize: "vertical" }} />
+            <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={3} placeholder="外观特征（斑点分布、体型、性格）、已知历史、目击地点日期等，有助于核实个体身份…" style={{ ...inp, resize: "vertical" }} />
           </div>
 
           {/* 数据来源 */}

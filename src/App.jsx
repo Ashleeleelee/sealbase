@@ -12,6 +12,7 @@ import DailyModal      from "./components/DailyModal";
 import StatsCharts     from "./components/StatsCharts";
 import ShareModal      from "./components/ShareModal";
 import { supabase }    from "./lib/supabase";
+import FacilityDetail from "./components/FacilityDetail";
 
 export default function App() {
   const [seals, setSeals]                   = useState([]);
@@ -26,6 +27,7 @@ export default function App() {
   const [toast, setToast]                   = useState(null);
   const [search, setSearch]                 = useState("");
   const [isMobile, setIsMobile]             = useState(() => window.innerWidth < 768);
+  const [selectedFacility, setSelectedFacility] = useState(null);
 
   useEffect(() => {
     fetchSeals();
@@ -191,36 +193,51 @@ export default function App() {
           )
         )}
 
-        {view === "facilities" && (
-          facilities.length === 0 ? (
-            <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: 48, textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🏛</div>
-              <div style={{ color: T.body, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>暂无园区记录</div>
-              <div style={{ color: T.faint, fontSize: 12.5 }}>提交个体记录后，园区信息将自动汇总显示</div>
-            </div>
-          ) : (
-            <>
-              <StatsCharts seals={seals} isMobile={isMobile} />
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(300px,1fr))", gap: 14 }}>
-                {facilities.map(f => (
-                  <div key={f.name} style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: 18 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                      <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.ink, fontFamily: "'Noto Serif SC',serif" }}>{f.name}</h3>
-                      {f.steward && <span style={{ background: "#EFF6FF", color: "#1D4ED8", fontSize: 10.5, padding: "2px 8px", borderRadius: 4, fontWeight: 600, whiteSpace: "nowrap", marginLeft: 8 }}>📋 {f.steward}</span>}
-                    </div>
-                    <div style={{ color: T.faint, fontSize: 11.5, marginBottom: 10 }}>
-                      {f.seals[0]?.province && f.seals[0]?.city ? `${f.seals[0].province} · ${f.seals[0].city}` : "—"}
-                    </div>
-                    <div style={{ borderTop: `1px solid ${T.bg}`, paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ color: T.faint, fontSize: 11.5 }}>记录个体</span>
-                      <span style={{ color: T.teal, fontSize: 13, fontWeight: 700 }}>{f.seals.length} 条</span>
-                    </div>
-                  </div>
-                ))}
+view === "facilities" && (
+  <>
+    {selectedFacility && (
+      <FacilityDetail
+        facility={selectedFacility}
+        seals={seals}
+        onClose={() => setSelectedFacility(null)}
+        isMobile={isMobile}
+      />
+    )}
+
+    {facilities.length === 0 ? (
+      <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: 48, textAlign: "center" }}>
+        <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🏛</div>
+        <div style={{ color: T.body, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>暂无园区记录</div>
+        <div style={{ color: T.faint, fontSize: 12.5 }}>提交个体记录后，园区信息将自动汇总显示</div>
+      </div>
+    ) : (
+      <>
+        <StatsCharts seals={seals} isMobile={isMobile} />
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(300px,1fr))", gap: 14 }}>
+          {facilities.map(f => (
+            <div key={f.name}
+              onClick={() => setSelectedFacility(f)}
+              style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: 18, cursor: "pointer", transition: "box-shadow 0.15s, border-color 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(8,145,178,0.12)"; e.currentTarget.style.borderColor = T.teal; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = T.border; }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.ink, fontFamily: "'Noto Serif SC',serif" }}>{f.name}</h3>
+                <span style={{ color: T.teal, fontSize: 13, flexShrink: 0, marginLeft: 8 }}>›</span>
               </div>
-            </>
-          )
-        )}
+              <div style={{ color: T.faint, fontSize: 11.5, marginBottom: 10 }}>
+                {f.seals[0]?.province && f.seals[0]?.city ? `${f.seals[0].province} · ${f.seals[0].city}` : "—"}
+              </div>
+              <div style={{ borderTop: `1px solid ${T.bg}`, paddingTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: T.faint, fontSize: 11.5 }}>记录个体</span>
+                <span style={{ color: T.teal, fontSize: 13, fontWeight: 700 }}>{f.seals.length} 条</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+  </>
+)}
 
         {view === "about" && (
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 280px", gap: 20, alignItems: "start" }}>
