@@ -265,7 +265,14 @@ export default function ShareModal({ seal, onClose }) {
     setPreviewUrl(null);
     try {
       const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js");
-      const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null, logging: false });
+      // 临时移除缩放
+      const el = cardRef.current;
+      const prev = el.style.transform;
+      el.style.transform = "none";
+      el.style.marginBottom = "0";
+      const canvas = await html2canvas(el, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null, logging: false });
+      el.style.transform = prev;
+      el.style.marginBottom = ratio === "9:16" ? "-180px" : "-50px";
       const url = canvas.toDataURL("image/png");
       if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
         setPreviewUrl(url);
@@ -338,4 +345,5 @@ export default function ShareModal({ seal, onClose }) {
     </div>
   );
 }
+
 
