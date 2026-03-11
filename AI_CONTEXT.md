@@ -34,6 +34,7 @@
 - 样式全部用 inline style，不引入 CSS 框架
 - 权限判断统一调 `getRole()`，不直接读 cookie 或 sessionStorage
 - 部署必须本地 build，不能依赖腾讯云自动 build（Node 18 报错）
+- **不能主动 push**：改完文件只 commit 到本地，等用户说「可以推了」再执行 git push
 
 ---
 
