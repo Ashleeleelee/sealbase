@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import T from "./utils/tokens";
+import { getRole, certify, isCertified, unlockRoot } from "./utils/auth";
 import Nav             from "./components/Nav";
 import Hero            from "./components/Hero";
 import StatsStrip      from "./components/StatsStrip";
@@ -31,7 +32,8 @@ export default function App() {
   const [showContribute, setShowContribute] = useState(false);
   const [showDaily, setShowDaily]           = useState(false);
   const [shareSeal, setShareSeal]           = useState(null);
-  const [certified, setCertified]           = useState(false);
+  const [certified, setCertified]           = useState(() => isCertified());
+  const [role, setRole]                     = useState(() => getRole());
   const [toast, setToast]                   = useState(null);
   const [search, setSearch]                 = useState("");
   const [filterSex, setFilterSex]           = useState("");
@@ -70,8 +72,24 @@ export default function App() {
     }
   };
 
+  // 获取或生成 visitorId
+  const getVisitorId = () => {
+    let id = localStorage.getItem("sealbase_visitor_id");
+    if (!id) {
+      id = "v_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("sealbase_visitor_id", id);
+    }
+    return id;
+  };
+
   // 确认数据（大众核实机制）
   const handleConfirm = async (seal) => {
+    const visitorId = getVisitorId();
+    const confirmedKey = `confirmed_${seal.id}`;
+    if (localStorage.getItem(confirmedKey)) {
+      pushToast("你已经确认过这条记录了");
+      return;
+    }
     const confirmations = (seal.confirmations || 0) + 1;
     const newQuality = confirmations >= 3 ? "已核实（官方报道）" : seal.data_quality;
     const { error } = await supabase
@@ -79,6 +97,7 @@ export default function App() {
       .update({ confirmations, data_quality: newQuality })
       .eq("id", seal.id);
     if (error) { pushToast("✗ 操作失败"); return; }
+    localStorage.setItem(confirmedKey, visitorId);
     setSeals(p => p.map(s => s.id === seal.id ? { ...s, confirmations, data_quality: newQuality } : s));
     if (selected?.id === seal.id) setSelected(s => ({ ...s, confirmations, data_quality: newQuality }));
     pushToast(confirmations >= 3 ? "✓ 已达到3人确认，数据升级为「已核实」" : `✓ 已确认（${confirmations}/3 人）`);
@@ -107,13 +126,13 @@ export default function App() {
     name, seals: seals.filter(s => s.facility === name),
     steward: seals.find(s => s.facility === name && s.steward)?.steward,
   }));
+
   const onContribute = () => certified ? setShowContribute(true) : setShowQuiz(true);
   const handleViewDailySeal = (seal) => { setView("records"); setSelected(seal); };
 
   // 筛选器组件
   const Filters = () => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-      {/* 性别 */}
       {["雌", "雄"].map(s => (
         <button key={s} style={SEL_STYLE(filterSex === s)}
           onClick={() => setFilterSex(filterSex === s ? "" : s)}>
@@ -121,7 +140,6 @@ export default function App() {
         </button>
       ))}
       <div style={{ width: 1, background: T.border, margin: "0 2px" }} />
-      {/* 状态 */}
       {["圈养展示", "救助中·待放归", "已放归", "繁育中"].map(s => (
         <button key={s} style={SEL_STYLE(filterStatus === s)}
           onClick={() => setFilterStatus(filterStatus === s ? "" : s)}>
@@ -130,14 +148,12 @@ export default function App() {
       ))}
       {provinces.length > 0 && <>
         <div style={{ width: 1, background: T.border, margin: "0 2px" }} />
-        {/* 省份 */}
         <select value={filterProvince} onChange={e => setFilterProvince(e.target.value)}
           style={{ ...SEL_STYLE(!!filterProvince), paddingRight: 24 }}>
           <option value="">全部省份</option>
           {provinces.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </>}
-      {/* 清除 */}
       {hasFilters && (
         <button onClick={() => { setFilterSex(""); setFilterStatus(""); setFilterProvince(""); }}
           style={{ ...SEL_STYLE(false), color: T.muted, fontSize: 11.5 }}>
@@ -157,7 +173,13 @@ export default function App() {
         </div>
       )}
 
-      {showQuiz && <QuizModal onPass={() => { setCertified(true); setShowQuiz(false); setShowContribute(true); }} onClose={() => setShowQuiz(false)} />}
+      {showQuiz && <QuizModal onPass={() => {
+        certify();
+        setCertified(true);
+        setRole(getRole());
+        setShowQuiz(false);
+        setShowContribute(true);
+      }} onClose={() => setShowQuiz(false)} />}
       {showContribute && <ContributeModal onClose={() => setShowContribute(false)} onSubmit={handleSubmit} existingSeals={seals} />}
       {showDaily && <DailyModal seals={seals} onClose={() => setShowDaily(false)} onViewSeal={handleViewDailySeal} />}
       {shareSeal && <ShareModal seal={shareSeal} onClose={() => setShareSeal(null)} isMobile={isMobile} />}
@@ -166,7 +188,7 @@ export default function App() {
         <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} onConfirm={handleConfirm} isDrawer={true} />
       )}
 
-      <Nav view={view} setView={setView} certified={certified} onContribute={onContribute} onDaily={() => setShowDaily(true)} isMobile={isMobile} />
+      <Nav view={view} setView={setView} certified={certified} role={role} onContribute={onContribute} onDaily={() => setShowDaily(true)} isMobile={isMobile} />
       <Hero seals={seals} isMobile={isMobile} />
       <StatsStrip seals={seals} facilities={facilities} isMobile={isMobile} />
 
@@ -363,12 +385,9 @@ export default function App() {
               <p style={{ color: T.body, fontSize: 13.5, lineHeight: 1.85, marginBottom: 14 }}>本数据库是由斑海豹爱好者自发建立的社区项目，专注于记录中国各水族馆、海洋公园及官方救助机构中的圈养斑海豹个体信息。</p>
               <p style={{ color: T.body, fontSize: 13.5, lineHeight: 1.85, marginBottom: 20 }}>项目灵感来源于海外的 Ceta-Base（圈养鲸豚数据库），希望在中文语境下建立类似的鳍足类个体档案资源。所有数据由社区贡献，仅供参考。</p>
 
-              {/* 数据可信度说明 */}
               <div style={{ background: "#F0FDFF", border: `1px solid #BAE6FD`, borderRadius: 10, padding: "16px 18px", marginBottom: 22 }}>
                 <h3 style={{ margin: "0 0 10px", fontSize: 13.5, color: T.teal, fontWeight: 700 }}>🔍 数据可信吗？</h3>
-                <p style={{ margin: "0 0 10px", color: "#0369A1", fontSize: 12.5, lineHeight: 1.8 }}>
-                  所有记录按数据质量分为三级：
-                </p>
+                <p style={{ margin: "0 0 10px", color: "#0369A1", fontSize: 12.5, lineHeight: 1.8 }}>所有记录按数据质量分为三级：</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                   {[
                     ["✓ 已核实", "#059669", "有3人以上确认，或来自官方报道、机构公告，可信度高"],
@@ -386,7 +405,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 谁在维护 */}
               <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 22 }}>
                 <h3 style={{ margin: "0 0 8px", fontSize: 13.5, color: T.ink, fontWeight: 700 }}>👥 谁在维护？</h3>
                 <p style={{ margin: 0, color: T.body, fontSize: 12.5, lineHeight: 1.8 }}>
@@ -395,18 +413,12 @@ export default function App() {
                   本项目与任何水族馆、海洋公园或官方机构无关。
                 </p>
               </div>
-              {/* 联系方式 */}
+
               <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 22 }}>
                 <h3 style={{ margin: "0 0 8px", fontSize: 13.5, color: T.ink, fontWeight: 700 }}>📬 联系我们</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ color: T.faint, fontSize: 12, width: 52 }}>邮箱</span>
-                    <a href="mailto:368496639@qq.com" style={{ color: T.teal, fontSize: 12.5, textDecoration: "none" }}>368496639@qq.com</a>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ color: T.faint, fontSize: 12, width: 52 }}>小红书</span>
-                    <span style={{ color: T.faint, fontSize: 12.5 }}>账号开通中，敬请期待</span>
-                  </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ color: T.faint, fontSize: 12, width: 52 }}>邮箱</span>
+                  <a href="mailto:368496639@qq.com" style={{ color: T.teal, fontSize: 12.5, textDecoration: "none" }}>368496639@qq.com</a>
                 </div>
               </div>
 
@@ -430,6 +442,32 @@ export default function App() {
                   </div>
                 ))}
               </div>
+
+              {/* root 隐藏入口：连续点击版本号 5 次解锁 */}
+              <div style={{ marginTop: 32, textAlign: "center" }}>
+                <span
+                  style={{ color: T.faint, fontSize: 10, cursor: "default", userSelect: "none" }}
+                  onClick={(() => {
+                    let count = 0;
+                    return () => {
+                      count++;
+                      if (count >= 5) {
+                        count = 0;
+                        const pwd = prompt("🔐 管理员密码");
+                        if (pwd === import.meta.env.VITE_ROOT_PASSWORD) {
+                          unlockRoot();
+                          setRole("root");
+                          alert("✓ 已解锁管理员模式");
+                        } else if (pwd !== null) {
+                          alert("密码错误");
+                        }
+                      }
+                    };
+                  })()}
+                >
+                  v0.1.0-beta
+                </span>
+              </div>
             </div>
             {!isMobile && <SpeciesPanel />}
           </div>
@@ -446,5 +484,3 @@ export default function App() {
     </div>
   );
 }
-
-

@@ -78,7 +78,7 @@ export default function Hero({ seals }) {
   const [bubble, setBubble] = useState(null);
 
   useEffect(() => {
-    if (Math.random() > 0.15) return;
+    if (Math.random() > 0.3) return;
     const timer = setTimeout(() => {
       setSealPos(Math.random() * 65 + 10);
       setVisible(true);
@@ -142,17 +142,17 @@ export default function Hero({ seals }) {
         }
       `}</style>
 
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, pointerEvents: "none", animation: "wave1 5s ease-in-out infinite" }}>
+      <div style={{ position: "absolute", bottom: -12, left: 0, right: 0, pointerEvents: "none", animation: "wave1 5s ease-in-out infinite" }}>
         <svg viewBox="0 0 1440 72" style={{ display: "block", width: "100%" }} preserveAspectRatio="none">
           <path d="M0,36 C120,60 240,12 360,36 C480,60 600,12 720,36 C840,60 960,12 1080,36 C1200,60 1320,20 1440,36 L1440,72 L0,72 Z" fill="#0E4D6B" opacity="0.9" />
         </svg>
       </div>
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, pointerEvents: "none", animation: "wave2 4s ease-in-out infinite 0.8s" }}>
+      <div style={{ position: "absolute", bottom: -12, left: 0, right: 0, pointerEvents: "none", animation: "wave2 4s ease-in-out infinite 0.8s" }}>
         <svg viewBox="0 0 1440 52" style={{ display: "block", width: "100%" }} preserveAspectRatio="none">
           <path d="M0,26 C180,48 360,4 540,26 C720,48 900,6 1080,26 C1260,46 1380,16 1440,26 L1440,52 L0,52 Z" fill="#0A3D52" opacity="0.85" />
         </svg>
       </div>
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, pointerEvents: "none", animation: "wave3 3s ease-in-out infinite 1.4s" }}>
+      <div style={{ position: "absolute", bottom: -12, left: 0, right: 0, pointerEvents: "none", animation: "wave3 3s ease-in-out infinite 1.4s" }}>
         <svg viewBox="0 0 1440 34" style={{ display: "block", width: "100%" }} preserveAspectRatio="none">
           <path d="M0,17 C90,30 180,4 270,17 C360,30 450,4 540,17 C630,30 720,4 810,17 C900,30 990,4 1080,17 C1170,30 1260,6 1350,17 C1395,23 1420,14 1440,17 L1440,34 L0,34 Z" fill="#1B6E8A" opacity="0.5" />
         </svg>
