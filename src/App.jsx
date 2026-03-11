@@ -84,7 +84,7 @@ export default function App() {
         <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} isDrawer={true} />
       )}
 
-      <Nav view={view} setView={setView} certified={certified} onContribute={onContribute} onDaily={() => setShowDaily(true)} />
+      <Nav view={view} setView={setView} certified={certified} onContribute={onContribute} onDaily={() => setShowDaily(true)} isMobile={isMobile} />
       <Hero seals={seals} isMobile={isMobile} />
       <StatsStrip seals={seals} facilities={facilities} isMobile={isMobile} />
 
