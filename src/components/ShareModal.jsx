@@ -252,20 +252,29 @@ export default function ShareModal({ seal, onClose }) {
   const [style, setStyle] = useState("navy");
   const [ratio, setRatio] = useState("1:1");
   const [saving, setSaving] = useState(false);
+ 
   const cardRef = useRef();
   const imgSrc = seal?.images && seal.images.length > 0 ? seal.images[0] : null;
   const CurrentCard = STYLES.find(s => s.id === style)?.Comp || CardNavy;
 
+  const [previewUrl, setPreviewUrl] = useState(null);
+
   const handleSave = async () => {
     if (!cardRef.current) return;
     setSaving(true);
+    setPreviewUrl(null);
     try {
       const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js");
       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null, logging: false });
-      const link = document.createElement("a");
-      link.download = `${seal.name}-sealbase-${style}-${ratio.replace(":", "x")}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const url = canvas.toDataURL("image/png");
+      if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
+        setPreviewUrl(url);
+      } else {
+        const link = document.createElement("a");
+        link.download = `${seal.name}-sealbase-${style}-${ratio.replace(":", "x")}.png`;
+        link.href = url;
+        link.click();
+      }
     } catch (e) {
       console.error(e);
       alert("保存失败，请截图保存");
@@ -310,6 +319,15 @@ export default function ShareModal({ seal, onClose }) {
             <CurrentCard seal={seal} ratio={ratio} imgSrc={imgSrc} />
           </div>
         </div>
+        {previewUrl && (
+          <div style={{ marginBottom: 14, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
+            <div style={{ background: T.bg, padding: "10px 14px 6px", textAlign: "center" }}>
+              <div style={{ color: T.body, fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}>📱 长按图片保存到相册</div>
+              <div style={{ color: T.faint, fontSize: 11 }}>或截图保存</div>
+            </div>
+            <img src={previewUrl} alt="分享名片" style={{ width: "100%", display: "block" }} />
+          </div>
+        )}
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={handleSave} disabled={saving} style={{ flex: 1, background: T.teal, border: "none", borderRadius: 9, padding: "12px 0", color: "white", fontSize: 14, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1, fontFamily: "inherit" }}>
             {saving ? "生成中…" : "⬇ 保存图片"}
@@ -320,3 +338,4 @@ export default function ShareModal({ seal, onClose }) {
     </div>
   );
 }
+

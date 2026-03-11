@@ -7,7 +7,6 @@ const STATUS_COLOR = {
   "繁育中":        { bg: "#FFFBEB", color: "#D97706", bar: "#F59E0B" },
 };
 
-// 空状态占位
 function EmptyChart({ label }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 140, gap: 8 }}>
@@ -17,10 +16,9 @@ function EmptyChart({ label }) {
   );
 }
 
-// 卡片容器
 function ChartCard({ title, subtitle, children }) {
   return (
-    <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: "18px 20px" }}>
+    <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, padding: "18px 20px", minWidth: 0 }}>
       <div style={{ marginBottom: 14 }}>
         <div style={{ color: T.ink, fontSize: 13, fontWeight: 700 }}>{title}</div>
         {subtitle && <div style={{ color: T.faint, fontSize: 11.5, marginTop: 2 }}>{subtitle}</div>}
@@ -30,7 +28,6 @@ function ChartCard({ title, subtitle, children }) {
   );
 }
 
-// 1. 各园区个体数量 — 横向柱状图
 function FacilityBarChart({ seals }) {
   const data = Object.entries(
     seals.reduce((acc, s) => { acc[s.facility] = (acc[s.facility] || 0) + 1; return acc; }, {})
@@ -40,12 +37,12 @@ function FacilityBarChart({ seals }) {
   const max = data[0][1];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, overflow: "hidden" }}>
       {data.map(([name, count]) => (
-        <div key={name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 110, fontSize: 11.5, color: T.body, textAlign: "right", flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 80, fontSize: 11.5, color: T.body, textAlign: "right", flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
             title={name}>{name}</div>
-          <div style={{ flex: 1, background: T.bg, borderRadius: 4, height: 18, overflow: "hidden" }}>
+          <div style={{ flex: 1, background: T.bg, borderRadius: 4, height: 18, overflow: "hidden", minWidth: 0 }}>
             <div style={{
               width: `${(count / max) * 100}%`, height: "100%",
               background: `linear-gradient(90deg, ${T.teal}, #0EA5E9)`,
@@ -62,7 +59,6 @@ function FacilityBarChart({ seals }) {
   );
 }
 
-// 2. 状态分布 — 横向堆叠 + 图例
 function StatusChart({ seals }) {
   if (!seals.length) return <EmptyChart label="暂无状态数据" />;
 
@@ -75,7 +71,6 @@ function StatusChart({ seals }) {
 
   return (
     <div>
-      {/* 堆叠条 */}
       <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", height: 28, marginBottom: 14 }}>
         {entries.map(([status, count]) => (
           <div key={status} title={`${status}: ${count}`} style={{
@@ -85,7 +80,6 @@ function StatusChart({ seals }) {
           }} />
         ))}
       </div>
-      {/* 图例 */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {entries.map(([status, count]) => (
           <div key={status} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -99,7 +93,6 @@ function StatusChart({ seals }) {
   );
 }
 
-// 3. 雌雄比例 — SVG 圆环图
 function SexDonutChart({ seals }) {
   const counts = { 雌: 0, 雄: 0, 未知: 0 };
   seals.forEach(s => { if (s.sex in counts) counts[s.sex]++; });
@@ -124,7 +117,6 @@ function SexDonutChart({ seals }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
       <svg width={120} height={120} style={{ flexShrink: 0 }}>
-        {/* 背景圆 */}
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={T.bg} strokeWidth={stroke} />
         {slices.map(s => (
           <circle key={s.label} cx={cx} cy={cy} r={r} fill="none"
@@ -153,7 +145,6 @@ function SexDonutChart({ seals }) {
   );
 }
 
-// 4. 入馆年份趋势 — 折线图 SVG
 function YearTrendChart({ seals }) {
   const withYear = seals.filter(s => s.arrived_year && /^\d{4}$/.test(s.arrived_year));
   if (withYear.length < 2) return <EmptyChart label="需至少 2 条有入馆年份的记录" />;
@@ -182,11 +173,8 @@ function YearTrendChart({ seals }) {
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
-      {/* 面积填充 */}
       <path d={area} fill={`${T.teal}18`} />
-      {/* 折线 */}
       <polyline points={polyline} fill="none" stroke={T.teal} strokeWidth={2} strokeLinejoin="round" />
-      {/* 数据点 */}
       {pts.map(p => (
         <g key={p.label}>
           <circle cx={p.x} cy={p.y} r={4} fill="white" stroke={T.teal} strokeWidth={2} />
@@ -198,8 +186,7 @@ function YearTrendChart({ seals }) {
   );
 }
 
-// 主导出组件
-export default function StatsCharts({ seals }) {
+export default function StatsCharts({ seals, isMobile = false }) {
   if (!seals || seals.length === 0) return null;
 
   return (
@@ -207,7 +194,7 @@ export default function StatsCharts({ seals }) {
       <div style={{ color: T.ink, fontSize: 14, fontWeight: 700, marginBottom: 12, fontFamily: "'Noto Serif SC',serif" }}>
         数据统计
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: 14 }}>
         <ChartCard title="各园区个体数量" subtitle="最多显示前 8 个园区">
           <FacilityBarChart seals={seals} />
         </ChartCard>

@@ -8,7 +8,7 @@ export default function Nav({ view, setView, certified, onContribute, onDaily })
   return (
     <>
       <nav style={{
-        background: T.navy, padding: "0 32px", display: "flex", alignItems: "center",
+        background: T.navy, padding: "0 16px", display: "flex", alignItems: "center",
         justifyContent: "space-between", height: 52, position: "sticky", top: 0, zIndex: 200,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -121,3 +121,4 @@ export default function Nav({ view, setView, certified, onContribute, onDaily })
     </>
   );
 }
+
