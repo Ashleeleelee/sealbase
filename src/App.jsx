@@ -395,6 +395,20 @@ export default function App() {
                   本项目与任何水族馆、海洋公园或官方机构无关。
                 </p>
               </div>
+              {/* 联系方式 */}
+              <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 22 }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: 13.5, color: T.ink, fontWeight: 700 }}>📬 联系我们</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ color: T.faint, fontSize: 12, width: 52 }}>邮箱</span>
+                    <a href="mailto:368496639@qq.com" style={{ color: T.teal, fontSize: 12.5, textDecoration: "none" }}>368496639@qq.com</a>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ color: T.faint, fontSize: 12, width: 52 }}>小红书</span>
+                    <span style={{ color: T.faint, fontSize: 12.5 }}>账号开通中，敬请期待</span>
+                  </div>
+                </div>
+              </div>
 
               <h3 style={{ margin: "0 0 10px", fontSize: 14, color: T.ink, fontWeight: 700 }}>功能说明</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -432,4 +446,5 @@ export default function App() {
     </div>
   );
 }
+
 

@@ -28,7 +28,7 @@ function CardNavy({ seal, ratio, imgSrc }) {
     <div style={{ width: w, height: h, background: T.navy, borderRadius: 16, overflow: "hidden", position: "relative", fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", flexShrink: 0 }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 80% 20%, rgba(8,145,178,0.15) 0%, transparent 60%)" }} />
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "52%" : "100%", width: isPortrait ? "100%" : "55%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", opacity: 0.85 }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(8,145,178,0.1)" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", inset: 0, background: isPortrait ? "linear-gradient(to bottom, transparent 50%, rgba(13,27,42,0.95) 100%)" : "linear-gradient(to right, transparent 40%, rgba(13,27,42,0.98) 100%)" }} />
       </div>
@@ -60,7 +60,7 @@ function CardWhite({ seal, ratio, imgSrc }) {
   return (
     <div style={{ width: w, height: h, background: "white", borderRadius: 16, overflow: "hidden", position: "relative", fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", border: `1px solid ${T.border}`, flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "55%" : "100%", width: isPortrait ? "100%" : "52%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center" }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F0F9FF" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)" }}>
           <span style={{ color: "white", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em" }}>🦭 SEALBASE</span>
@@ -104,7 +104,7 @@ function CardKraft({ seal, ratio, imgSrc }) {
         {/* 图片区 */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "52%" : "100%", width: isPortrait ? "100%" : "50%" }}>
           {imgSrc
-            ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", filter: "sepia(40%) contrast(0.85) brightness(0.97) saturate(0.8)", opacity: 0.9 }} crossOrigin="anonymous" />
+            ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", filter: "sepia(40%) contrast(0.85) brightness(0.97) saturate(0.8)", opacity: 0.9 }} crossOrigin="anonymous" />
             : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #E8D090 0%, #D4B870 100%)" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />
           }
           {/* 图片褪色 */}
@@ -211,7 +211,7 @@ function CardOcean({ seal, ratio, imgSrc }) {
         <path d="M0 60 Q50 30 100 60 Q150 90 200 60 Q250 30 300 60 Q350 90 400 60 L400 120 L0 120Z" fill="rgba(255,255,255,0.06)" />
       </svg>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "48%" : "100%", width: isPortrait ? "100%" : "50%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7, mixBlendMode: "luminosity" }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", opacity: 0.7, mixBlendMode: "luminosity" }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", inset: 0, background: isPortrait ? "linear-gradient(to bottom, rgba(8,145,178,0.3) 0%, rgba(12,74,110,0.75) 100%)" : "linear-gradient(to right, rgba(8,145,178,0.2) 0%, rgba(12,74,110,0.78) 100%)" }} />
       </div>
