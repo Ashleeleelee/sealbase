@@ -461,12 +461,16 @@ export default function App() {
                   style={{ color: T.faint, fontSize: 10, cursor: "default", userSelect: "none" }}
                   onClick={(() => {
                     let count = 0;
-                    return () => {
+                    return async () => {
                       count++;
                       if (count >= 5) {
                         count = 0;
                         const pwd = prompt("🔐 管理员密码");
-                        if (pwd === import.meta.env.VITE_ROOT_PASSWORD) {
+                        if (!pwd) return;
+                        const hash = Array.from(
+                          new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pwd)))
+                        ).map(b => b.toString(16).padStart(2,"0")).join("");
+                        if (hash === import.meta.env.VITE_ROOT_PASSWORD_HASH) {
                           unlockRoot();
                           setRole("root");
                           alert("✓ 已解锁管理员模式");

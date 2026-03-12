@@ -444,7 +444,8 @@ const handleConfirm = async (seal) => {
 # 本地开发
 cd ~/Desktop/sealbase && npm run dev
 
-# build + 推送
+# build + 推送（带 Clash 代理，否则 push 可能失败）
+export https_proxy=http://127.0.0.1:7890 && export http_proxy=http://127.0.0.1:7890 && export all_proxy=socks5://127.0.0.1:7890
 cd ~/Desktop/sealbase && npm run build && git add . && git commit -m "描述" && git push origin main
 
 # 查看 git 状态
