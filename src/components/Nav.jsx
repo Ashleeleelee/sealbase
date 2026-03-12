@@ -1,8 +1,9 @@
 import { useState } from "react";
 import T from "../utils/tokens";
 
-export default function Nav({ view, setView, certified, onContribute, onDaily, isMobile }) {
+export default function Nav({ view, setView, certified, role, onContribute, onDaily, isMobile }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const isRoot = role === "root";
   const navItems = [["records", "个体记录"], ["facilities", "饲养机构"], ["about", "关于项目"]];
 
   return (
@@ -20,6 +21,15 @@ export default function Nav({ view, setView, certified, onContribute, onDaily, i
 
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            {isRoot && (
+              <button onClick={() => setView("admin")} style={{
+                background: view === "admin" ? "#DC2626" : "rgba(220,38,38,0.15)",
+                border: "1px solid rgba(220,38,38,0.5)", borderRadius: 6,
+                color: view === "admin" ? "white" : "#FCA5A5",
+                fontSize: 11.5, padding: "4px 10px", cursor: "pointer", fontFamily: "inherit", fontWeight: 700,
+                marginRight: 4,
+              }}>🔐 管理员模式</button>
+            )}
             <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 10.5, fontStyle: "italic", marginRight: 8 }}>
               Phoca largha Captive Registry
             </span>
@@ -85,6 +95,13 @@ export default function Nav({ view, setView, certified, onContribute, onDaily, i
             fontSize: 13.5, padding: "13px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
           }}>🦭 今日一豹</button>
           <div style={{ margin: "8px 16px 4px" }}>
+            {isRoot && (
+              <button onClick={() => { setView("admin"); setMenuOpen(false); }} style={{
+                background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.5)",
+                borderRadius: 8, padding: "10px 0", color: "#FCA5A5",
+                fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", width: "100%", marginBottom: 8,
+              }}>🔐 管理员后台</button>
+            )}
             <button onClick={() => { onContribute(); setMenuOpen(false); }} style={{
               background: T.teal, border: "none", borderRadius: 8, padding: "11px 0",
               color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", width: "100%",

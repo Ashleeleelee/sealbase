@@ -13,6 +13,7 @@ import DailyModal      from "./components/DailyModal";
 import StatsCharts     from "./components/StatsCharts";
 import ShareModal      from "./components/ShareModal";
 import FacilityDetail  from "./components/FacilityDetail";
+import AdminPanel      from "./components/AdminPanel";
 import { supabase }    from "./lib/supabase";
 
 const SEL_STYLE = (active) => ({
@@ -376,6 +377,17 @@ export default function App() {
               </>
             )}
           </>
+        )}
+
+        {view === "admin" && (
+          <AdminPanel
+            seals={seals}
+            onSealUpdate={(id, patch) => {
+              setSeals(p => p.map(s => s.id === id ? { ...s, ...patch } : s));
+              if (selected?.id === id) setSelected(s => ({ ...s, ...patch }));
+            }}
+            isMobile={isMobile}
+          />
         )}
 
         {view === "about" && (
