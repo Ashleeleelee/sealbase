@@ -378,11 +378,11 @@ const handleConfirm = async (seal) => {
 
 ## 9. 当前状态（每次会话后更新）
 
-**最近一次 build**：✅ 通过（89 modules），已推送
+**最近一次 build**：✅ 通过（90 modules），已推送
 
-**线上功能**：全部正常（Hero 波浪、彩蛋、权限系统、园区观察记录）
+**线上功能**：全部正常（Hero 波浪、彩蛋、权限系统、园区观察记录、管理员后台）
 
-**数据库**：冷启动阶段，有少量测试记录
+**数据库**：冷启动阶段，有少量测试记录。seals 表已补 UPDATE policy，admin_logs 表已建。
 
 ---
 
@@ -435,6 +435,68 @@ const handleConfirm = async (seal) => {
 移除私人信息：邮箱改为引用源文件，Supabase key 改为引用 supabase.js。
 补充「不主动 push」约定。
 扩写「写给使用这个项目的人」一节，加入 MCP/Agent 概念解释和合作建议。
+修复确认机制：Supabase seals 表缺 UPDATE policy，导致 confirmations 静默失败；手动在控制台添加后修复。
+root 密码改为 SHA-256 哈希存储（VITE_ROOT_PASSWORD_HASH），验证用 Web Crypto API 在浏览器本地完成。
+新增管理员后台（AdminPanel.jsx）：Nav 显示红色「🔐 管理员模式」标识，view="admin" 页面含待审核/存疑/操作日志三个 tab，每次操作写入 admin_logs 表，支持撤回。
+Supabase 新建 admin_logs 表（id, action, target_id, target_name, before, after, note）。
+确认 push 需带 Clash 代理命令，已记入附录。
+
+---
+
+## 【临时交接】下一个 AI 请读这里（读完可删）
+
+### 本次会话做了什么
+
+1. **修复 confirmations 不写入问题**
+   - 根本原因：Supabase `seals` 表只有 SELECT/INSERT policy，缺 UPDATE policy
+   - 解决方式：用户在 Supabase 控制台手动添加 UPDATE policy（USING: true, WITH CHECK: true）
+   - 代码逻辑本身没问题，不需要改
+   - 注意：`facility_observations` 表同样只有 INSERT/SELECT，如将来需要 UPDATE 也要补
+
+2. **root 密码改为哈希存储**
+   - `.env.local` 变量名从 `VITE_ROOT_PASSWORD` 改为 `VITE_ROOT_PASSWORD_HASH`
+   - 存的是 SHA-256 哈希值（明文密码用户自己知道，不记录在此）
+   - `App.jsx` 关于页 root 入口的验证逻辑：用户输入 → `crypto.subtle.digest("SHA-256")` → 比对哈希
+   - 回调函数加了 `async`，用 `await` 等待哈希计算
+
+3. **新增管理员后台**
+   - 新文件：`src/components/AdminPanel.jsx`
+   - `Nav.jsx` 接收新 prop `role`，root 登录后显示红色「🔐 管理员模式」按钮
+   - `App.jsx` 新增 `view="admin"` 分支，渲染 `<AdminPanel>`
+   - AdminPanel 三个 tab：待审核（data_quality=待核实）/ 存疑记录 / 操作日志
+   - 每次操作（修改 data_quality）写一条 `admin_logs` 记录，含 before/after jsonb
+   - 操作日志里有「↩ 撤回」按钮，读取 before 恢复原值，再写一条 action="revert" 日志
+   - `onSealUpdate(id, patch)` 回调同步更新 App.jsx 里的 seals state 和 selected state
+
+4. **Supabase admin_logs 表**（用户已在控制台建好）
+   ```sql
+   id bigserial primary key
+   created_at timestamptz default now()
+   action text          -- "update_quality" | "revert"
+   target_id bigint
+   target_name text
+   before jsonb
+   after jsonb
+   note text
+   ```
+   RLS：anon 可 SELECT 和 INSERT
+
+5. **push 方式确认**
+   - 用户使用 Clash 代理，push 前必须设置代理环境变量
+   - AI 以后执行 push 时直接带上，不需要再问用户
+
+### 下一步用户可能想做的事（根据对话推断）
+
+- 录入真实斑海豹数据（删除测试记录）
+- 扩充题库到 50 题（替换 `src/data/quizBank.js`）
+- 完善 AdminPanel：目前只能改 data_quality，将来可能要加删除个体功能
+- 测试确认机制是否真正修好（需要真实数据）
+
+### 注意事项
+
+- `App.jsx` 里 root 解锁入口的 onClick 是一个 IIFE 返回的 `async` 函数，闭包里有 `count` 计数器，改这里要小心不要破坏闭包结构
+- AdminPanel 的 `onSealUpdate` 同时更新 `seals` 数组和 `selected` state，如果将来加删除功能，需要同时从两处清除
+- build 后 dist 目录的 js 文件名会变（content hash），git commit 时会看到 rename，这是正常的
 
 ---
 
