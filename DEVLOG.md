@@ -14,9 +14,10 @@
 
 ### 部署命令
 ```bash
+export https_proxy=http://127.0.0.1:7890 && export http_proxy=http://127.0.0.1:7890 && export all_proxy=socks5://127.0.0.1:7890
 cd ~/Desktop/sealbase && npm run build && git add . && git commit -m "..." && git push origin main
 ```
-注意：腾讯云不能自己 build，必须推 dist，否则会用旧代码重新构建
+注意：腾讯云部署路径是 /sealbase，vite.config.js 的 base 必须是 '/sealbase/'，两者必须一致
 
 ---
 
@@ -55,7 +56,7 @@ amber=#D97706 amberPale=#FFFBEB
 - root 用 sessionStorage，关浏览器失效
 - src/utils/auth.js 是统一入口
 - root 解锁：关于页版本号连点 5 次 + 密码
-- 密码存 .env.local（不被 git 追踪）：VITE_ROOT_PASSWORD=你的密码
+- 密码存 .env.local（不被 git 追踪）：VITE_ROOT_PASSWORD_HASH=密码的SHA-256哈希值
 
 ---
 
@@ -72,30 +73,34 @@ amber=#D97706 amberPale=#FFFBEB
 - 分享名片（4 风格 x 2 比例，含二维码）
 - 园区指南（评分、图片、观察记录）
 - Hero 动态波浪（三层独立起伏，底部无空隙）
-- 彩蛋海豹（15% 概率，点击显示冷知识）
+- 彩蛋海豹（30% 概率，点击显示冷知识）
 - 知识认证题库
 - auth.js 权限工具（getRole/certify/unlockRoot/grantModerator）
 - certified cookie 持久化
+- root 密码 SHA-256 哈希存储
+- 管理员后台（AdminPanel.jsx）：待审核/存疑/操作日志三 tab，含撤回功能
 
 ---
 
 ## 待完成
 
-- [ ] npm run build 验证 auth.js 无报错
-- [ ] .env.local 设置真实 root 密码
-- [ ] root 管理后台（目前只有 alert）
-- [ ] 题库替换为 50 题版本
+- [ ] 设置真实 root 密码（打开 .env.local 填写 VITE_ROOT_PASSWORD_HASH）
 - [ ] 录入真实数据，删除测试记录
+- [ ] 题库替换为 50 题版本
 - [ ] Supabase 建 moderators 表（结构已设计，暂不实现）
+- [ ] .gitignore 清理 .claude/ 目录
 
 ---
 
 ## 技术备忘
 
-- 腾讯云 Node 18 build JSX 报错 → 本地 build dist 推上去
+- 腾讯云部署路径 /sealbase → vite.config.js 的 base 必须是 '/sealbase/'
+- 腾讯云 Node 18 build JSX 报错 → 本地 build dist 推上去（云端构建命令留空）
 - 终端 heredoc 写中文 JSX 乱码 → 改用 VSCodium 粘贴
 - filesystem MCP 已连接 ~/Desktop/sealbase
+- Desktop Commander MCP 已配置（可直接执行终端命令）
 - anon key 暴露前端是已知妥协，安全边界在 Supabase RLS
+- push 需要 Clash 代理（127.0.0.1:7890）
 
 ---
 
@@ -123,9 +128,23 @@ amber=#D97706 amberPale=#FFFBEB
 讨论权限体系架构
 
 ### 2026-03-11 晚上
-配置 filesystem MCP，Claude 可直接读写本地代码
-讨论权限最小化实现，确定三层架构
-写入 src/utils/auth.js
+配置 filesystem MCP + Desktop Commander
+实现 src/utils/auth.js 完整权限工具
 更新 App.jsx 接入 auth，certified 从 cookie 读取，加 root 隐藏入口
 创建 .env.local 存放 root 密码
-待验证：npm run build 确认无报错后推线上
+验证 npm run build 通过（89 modules），已推送
+
+### 2026-03-12 当前会话
+**MCP Shell 排查与修复**
+- 发现 Claude Desktop 报错 "could not attach to mcp shell"
+- 原因：claude_desktop_config.json 中配置了不存在的 npm 包 @modelcontextprotocol/server-shell
+- 解决：删除 shell MCP 配置，保留 filesystem + desktop-commander 两个有效 MCP
+
+**网站 404 故障排查（历时较长，记录完整过程）**
+- 症状：线上网站打开 404，本地运行正常
+- 初步误判：AI 错误地将 vite.config.js 的 base 从 '/sealbase/' 改为 '/'，导致问题加重
+- 真实原因：腾讯云部署命令是 `tcb hosting deploy ./dist /sealbase`，文件部署在 /sealbase/ 子目录，因此 base 必须是 '/sealbase/'
+- 进一步发现：curl 请求返回 content-disposition: attachment，说明腾讯云把 index.html 当附件返回
+- 最终定位：用户访问的是根路径 /，而文件在 /sealbase/，两者不匹配
+- 解决：vite.config.js 恢复 base: '/sealbase/'，推送后腾讯云重新部署，网站恢复正常
+- 教训：腾讯云部署路径和 vite base 必须保持一致，不能随意修改其中一个

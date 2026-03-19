@@ -141,7 +141,7 @@ export default function App() {
         </button>
       ))}
       <div style={{ width: 1, background: T.border, margin: "0 2px" }} />
-      {["圈养展示", "救助中·待放归", "已放归", "繁育中"].map(s => (
+      {["圈养展示", "救助中·待放归", "已放归", "繁育中", "死亡"].map(s => (
         <button key={s} style={SEL_STYLE(filterStatus === s)}
           onClick={() => setFilterStatus(filterStatus === s ? "" : s)}>
           {s}

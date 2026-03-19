@@ -39,6 +39,8 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
   const [dupWarn, setDupWarn] = useState(null);
+  const [facilitySuggestions, setFacilitySuggestions] = useState([]);
+  const [showFacilitySug, setShowFacilitySug] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -47,6 +49,15 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
 
   const onProvinceChange = (v) => { set("province", v); set("city", ""); };
   const availableCities = form.province ? PROVINCE_CITY_MAP[form.province] || [] : [];
+
+  const onFacilityChange = (v) => {
+    set("facility", v);
+    if (!v) { setFacilitySuggestions([]); return; }
+    const existing = [...new Set(existingSeals.map(s => s.facility).filter(Boolean))];
+    const hits = existing.filter(f => f.includes(v) || v.includes(f));
+    setFacilitySuggestions(hits);
+    setShowFacilitySug(hits.length > 0);
+  };
 
   const onNameChange = (v) => {
     set("name", v);
@@ -99,7 +110,7 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
   };
   const inpDisabled = { ...inp, background: T.bg, color: T.faint, cursor: "not-allowed" };
   const lbl = { color: T.body, fontSize: 11.5, display: "block", marginBottom: 5, fontWeight: 600 };
-  const ok = form.name && form.facility && form.sourceRef && !uploading;
+  const ok = form.name && form.facility && imageFiles.length > 0 && !uploading;
 
   const handleSubmit = async () => {
     if (!ok) return;
@@ -170,10 +181,27 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             )}
           </div>
 
-          {/* 所在园区 */}
-          <div>
+          {/* 所在园区（带联想） */}
+          <div style={{ position: "relative" }}>
             <label style={lbl}>所在园区 *</label>
-            <input value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="机构全名，如：大连圣亚海洋世界" style={inp} />
+            <input
+              value={form.facility}
+              onChange={e => onFacilityChange(e.target.value)}
+              onBlur={() => setTimeout(() => setShowFacilitySug(false), 160)}
+              onFocus={() => facilitySuggestions.length && setShowFacilitySug(true)}
+              placeholder="机构全名，如：大连圣亚海洋世界" style={inp} />
+            {showFacilitySug && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", border: `1px solid ${T.border}`, borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.1)", zIndex: 10, marginTop: 4, overflow: "hidden" }}>
+                {facilitySuggestions.map(f => (
+                  <div key={f} onClick={() => { set("facility", f); setShowFacilitySug(false); }}
+                    style={{ padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${T.bg}`, fontSize: 13, color: T.ink }}
+                    onMouseEnter={e => e.currentTarget.style.background = T.bg}
+                    onMouseLeave={e => e.currentTarget.style.background = "white"}>
+                    🏛 {f}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 省份 → 城市联动 */}
@@ -206,10 +234,18 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             <div>
               <label style={lbl}>当前状态</label>
               <select value={form.status} onChange={e => set("status", e.target.value)} style={inp}>
-                {["圈养展示", "救助中·待放归", "已放归", "繁育中"].map(s => <option key={s}>{s}</option>)}
+                {["圈养展示", "救助中·待放归", "已放归", "繁育中", "死亡"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
           </div>
+
+          {/* 死亡字段 */}
+          {form.status === "死亡" && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, background: "#F9FAFB", padding: 12, borderRadius: 8, border: `1px solid ${T.border}` }}>
+              <div><label style={{ ...lbl, color: T.muted }}>死亡日期</label><input value={form.deathDate || ""} onChange={e => set("deathDate", e.target.value)} placeholder="如：2024-08" style={inp} /></div>
+              <div><label style={{ ...lbl, color: T.muted }}>死亡原因</label><input value={form.deathCause || ""} onChange={e => set("deathCause", e.target.value)} placeholder="如：自然死亡 / 疾病" style={inp} /></div>
+            </div>
+          )}
 
           {/* 放归字段 */}
           {form.status === "已放归" && (
@@ -227,7 +263,10 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
 
           {/* 图片上传 */}
           <div>
-            <label style={lbl}>上传图片（可多张）</label>
+            <label style={{ ...lbl, display: "flex", alignItems: "center", gap: 8 }}>
+              上传图片
+              <span style={{ background: T.amberPale, color: T.amber, fontSize: 10.5, padding: "1px 8px", borderRadius: 99, fontWeight: 700 }}>必填·至少一张</span>
+            </label>
             {/* 预览区 */}
             {imagePreviews.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
@@ -260,17 +299,20 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
             <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={3} placeholder="外观特征（斑点分布、体型、性格）、已知历史、目击地点日期等，有助于核实个体身份…" style={{ ...inp, resize: "vertical" }} />
           </div>
 
-          {/* 数据来源 */}
+          {/* 数据来源（选填） */}
           <div>
             <label style={{ ...lbl, display: "flex", gap: 8, alignItems: "center" }}>
-              数据来源 *
-              <span style={{ background: T.amberPale, color: T.amber, fontSize: 10.5, padding: "1px 8px", borderRadius: 99, fontWeight: 700 }}>必填</span>
+              数据来源
+              <span style={{ background: T.bg, color: T.faint, fontSize: 10.5, padding: "1px 8px", borderRadius: 99, fontWeight: 600, border: `1px solid ${T.border}` }}>选填</span>
             </label>
             <input value={form.sourceRef} onChange={e => set("sourceRef", e.target.value)} placeholder="官网链接 / 新闻报道标题 / 现场观察日期…" style={inp} />
-            <div style={{ color: T.faint, fontSize: 11, marginTop: 4 }}>无可核实来源的记录将被标注为「存疑」</div>
+            <div style={{ color: T.faint, fontSize: 11, marginTop: 4 }}>有来源的记录更容易通过核实</div>
           </div>
 
           {/* 提交按钮 */}
+          {!form.name && <div style={{ color: T.amber, fontSize: 12, marginTop: -8 }}>⚠ 请填写个体名称</div>}
+          {form.name && !form.facility && <div style={{ color: T.amber, fontSize: 12, marginTop: -8 }}>⚠ 请填写所在园区</div>}
+          {form.name && form.facility && imageFiles.length === 0 && <div style={{ color: T.amber, fontSize: 12, marginTop: -8 }}>⚠ 请至少上传一张图片</div>}
           <button onClick={handleSubmit} disabled={!ok}
             style={{ background: ok ? T.teal : "#BAE6FD", border: "none", borderRadius: 8, padding: 13, color: "white", fontSize: 14, fontWeight: 700, cursor: ok ? "pointer" : "default", fontFamily: "inherit", marginTop: 4 }}>
             {uploading ? "上传图片中…" : "提交审核"}

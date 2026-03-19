@@ -5,6 +5,7 @@ export const STATUS_META = {
   "救助中·待放归": { dot: T.green,   bg: T.greenPale, text: "#065F46" },
   "已放归":        { dot: "#6B7280", bg: "#F1F5F9",   text: "#334155" },
   "繁育中":        { dot: T.amber,   bg: T.amberPale, text: "#92400E" },
+  "死亡":          { dot: "#9CA3AF", bg: "#F3F4F6",   text: "#6B7280" },
 };
 
 export const QUALITY_CFG = {
