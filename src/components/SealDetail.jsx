@@ -3,10 +3,12 @@ import T from "../utils/tokens";
 import { StatusPill, QualityBadge, FieldRow } from "./Badges";
 import ImageGallery from "./ImageGallery";
 import Timeline from "./Timeline";
+import SupplementModal from "./SupplementModal";
 
 export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer = false }) {
   const [tab, setTab] = useState("info");
   const [confirming, setConfirming] = useState(false);
+  const [showSupplement, setShowSupplement] = useState(false);
 
   const tabBtn = (id, label, badge) => (
     <button onClick={() => setTab(id)} style={{ background: "none", border: "none", borderBottom: tab === id ? `2px solid ${T.teal}` : "2px solid transparent", padding: "8px 14px 9px", marginBottom: -1, color: tab === id ? T.teal : T.muted, fontSize: 12.5, fontWeight: tab === id ? 700 : 400, cursor: "pointer", fontFamily: "inherit" }}>
@@ -37,6 +39,14 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
 
   const content = (
     <>
+      {showSupplement && (
+        <SupplementModal
+          seal={seal}
+          onClose={() => setShowSupplement(false)}
+          onSubmit={() => setShowSupplement(false)}
+        />
+      )}
+
       <div style={{ background: T.navy, padding: "18px 22px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderRadius: isDrawer ? "16px 16px 0 0" : "10px 10px 0 0" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
@@ -78,6 +88,13 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
               <p style={{ color: T.body, fontSize: 12.5, lineHeight: 1.8, margin: 0 }}>{seal.notes || "暂无备注"}</p>
             </div>
 
+            {/* 补充体重/体况入口 — 醒目放在档案区下方 */}
+            <button
+              onClick={() => setShowSupplement(true)}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: T.tealPale, border: `1.5px solid ${T.teal}`, borderRadius: 8, padding: "10px 12px", color: T.teal, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 12 }}>
+              ⚖️ 补充体重 / 体况 / 动态
+            </button>
+
             {/* 数据质量 + 核实进度 */}
             <div style={{ background: isVerified ? T.greenPale : T.amberPale, border: `1px solid ${isVerified ? "#6EE7B7" : "#FDE68A"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -86,7 +103,6 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
               </div>
               {!isVerified && (
                 <>
-                  {/* 核实进度条 */}
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                       <span style={{ color: T.body, fontSize: 11 }}>社区核实进度</span>
