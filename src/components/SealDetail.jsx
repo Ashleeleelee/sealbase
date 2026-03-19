@@ -29,6 +29,9 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
 
   const confirmations = seal.confirmations || 0;
   const isVerified = seal.data_quality === "已核实（官方报道）";
+  const currentYear = new Date().getFullYear();
+  const ageDisplay = seal.birth_year ? `约 ${currentYear - seal.birth_year} 岁（${seal.birth_year} 年生）` : null;
+  const weightDisplay = seal.weight_kg ? `${seal.weight_kg} kg` : null;
 
   const handleConfirm = async () => {
     if (!onConfirm || confirming || isVerified) return;
@@ -71,8 +74,8 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
               <div style={{ color: T.faint, fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>基本数据</div>
               <FieldRow label="个体名称" value={seal.name} />
               <FieldRow label="性别" value={seal.sex} />
-              <FieldRow label="估计年龄" value={seal.ageEst} />
-              <FieldRow label="体重" value={seal.weight} />
+              <FieldRow label="估计年龄" value={ageDisplay} />
+              <FieldRow label="体重" value={weightDisplay} />
             </div>
             <div style={{ marginBottom: 16 }}>
               <div style={{ color: T.faint, fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>圈养信息</div>

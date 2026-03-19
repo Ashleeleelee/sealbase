@@ -33,8 +33,8 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
   const [form, setForm] = useState({
     name: "", facility: "", city: "", province: "",
     sex: "未知", status: "圈养展示", source: "",
-    arrivedYear: "", notes: "", releaseDate: "",
-    releaseLocation: "", sourceRef: ""
+    arrivedYear: "", birthYear: "", weightKg: "",
+    notes: "", releaseDate: "", releaseLocation: "", sourceRef: ""
   });
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
@@ -123,6 +123,8 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
       release_date: form.releaseDate, release_location: form.releaseLocation,
       source_ref: form.sourceRef, data_quality: "待核实",
       images: imageUrls,
+      birth_year: form.birthYear ? parseInt(form.birthYear) : null,
+      weight_kg: form.weightKg ? parseFloat(form.weightKg) : null,
     });
     setUploading(false);
     onClose();
@@ -259,6 +261,20 @@ export default function ContributeModal({ onClose, onSubmit, existingSeals }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div><label style={lbl}>个体来源</label><input value={form.source} onChange={e => set("source", e.target.value)} placeholder="野外救助 / 人工繁育…" style={inp} /></div>
             <div><label style={lbl}>入馆年份</label><input value={form.arrivedYear} onChange={e => set("arrivedYear", e.target.value)} placeholder="如：2021" style={inp} /></div>
+          </div>
+
+          {/* 出生年份 + 体重 */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={lbl}>估计出生年份</label>
+              <input value={form.birthYear} onChange={e => set("birthYear", e.target.value)} placeholder="如：2019" style={inp} />
+              <div style={{ color: T.faint, fontSize: 10.5, marginTop: 3 }}>不确定可不填</div>
+            </div>
+            <div>
+              <label style={lbl}>当前体重（kg）</label>
+              <input value={form.weightKg} onChange={e => set("weightKg", e.target.value)} placeholder="如：45.2" style={inp} />
+              <div style={{ color: T.faint, fontSize: 10.5, marginTop: 3 }}>可后期通过补充更新</div>
+            </div>
           </div>
 
           {/* 图片上传 */}

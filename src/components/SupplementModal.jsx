@@ -55,7 +55,7 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
     const imageUrls = await uploadImages();
     const updates = { ...seal };
 
-    // 体重/体况 → 写入时间线
+    // 体重/体况 → 写入时间线，并同步更新 weight_kg
     if (weight || condition || healthNote) {
       const parts = [];
       if (weight) parts.push(`体重 ${weight}kg`);
@@ -65,6 +65,11 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
         date: healthDate || new Date().toISOString().slice(0, 7),
         text: parts.join("，"),
       }];
+      // 同步更新档案里的最新体重
+      if (weight) {
+        await supabase.from("seals").update({ weight_kg: parseFloat(weight) }).eq("id", seal.id);
+        updates.weight_kg = parseFloat(weight);
+      }
     }
 
     // 时间线动态
