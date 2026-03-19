@@ -55,31 +55,41 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
     const imageUrls = await uploadImages();
     const updates = { ...seal };
 
-    // 体重/体况 → 写入时间线，并同步更新 weight_kg
+    // 收集新增时间线条目
+    const newEntries = [];
+
     if (weight || condition || healthNote) {
       const parts = [];
       if (weight) parts.push(`体重 ${weight}kg`);
       if (condition) parts.push(`体况：${condition}`);
       if (healthNote) parts.push(healthNote);
-      updates.timeline = [...(seal.timeline || []), {
+      newEntries.push({
         date: healthDate || new Date().toISOString().slice(0, 7),
         text: parts.join("，"),
-      }];
-      // 同步更新档案里的最新体重
-      if (weight) {
-        await supabase.from("seals").update({ weight_kg: parseFloat(weight) }).eq("id", seal.id);
-        updates.weight_kg = parseFloat(weight);
-      }
+      });
     }
 
-    // 时间线动态
     if (eventDate && eventText) {
-      updates.timeline = [...(updates.timeline || seal.timeline || []), { date: eventDate, text: eventText }];
+      newEntries.push({ date: eventDate, text: eventText });
     }
 
-    // 图片
+    // 持久化到 Supabase
+    const dbUpdates = {};
+    if (newEntries.length) {
+      dbUpdates.timeline = [...(seal.timeline || []), ...newEntries];
+      updates.timeline = dbUpdates.timeline;
+    }
+    if (weight) {
+      dbUpdates.weight_kg = parseFloat(weight);
+      updates.weight_kg = dbUpdates.weight_kg;
+    }
     if (imageUrls.length) {
-      updates.images = [...(seal.images || []), ...imageUrls];
+      dbUpdates.images = [...(seal.images || []), ...imageUrls];
+      updates.images = dbUpdates.images;
+    }
+
+    if (Object.keys(dbUpdates).length) {
+      await supabase.from("seals").update(dbUpdates).eq("id", seal.id);
     }
 
     onSubmit(updates);
