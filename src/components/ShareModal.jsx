@@ -248,14 +248,14 @@ const STYLES = [
   { id: "ocean", label: "海洋", desc: "青绿渐变", Comp: CardOcean },
 ];
 
-export default function ShareModal({ seal, onClose }) {
+export default function ShareModal({ seal, onClose, isMobile: isMobileProp }) {
   const [style, setStyle] = useState("navy");
   const [ratio, setRatio] = useState("1:1");
   const [saving, setSaving] = useState(false);
   const [imgPosX, setImgPosX] = useState(50);
   const [imgPosY, setImgPosY] = useState(50);
 
-  const isMobile = window.innerWidth < 768;
+  const isMobile = isMobileProp !== undefined ? isMobileProp : window.innerWidth < 768;
   const cardRef = useRef();
   const imgSrc = seal?.images && seal.images.length > 0 ? seal.images[0] : null;
   const objPos = `${imgPosX}% ${imgPosY}%`;

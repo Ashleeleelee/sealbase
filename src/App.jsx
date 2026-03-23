@@ -204,7 +204,17 @@ export default function App() {
       {shareSeal && <ShareModal seal={shareSeal} onClose={() => setShareSeal(null)} isMobile={isMobile} />}
 
       {isMobile && selected && (
-        <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} onConfirm={handleConfirm} isDrawer={true} />
+        <SealDetail
+          seal={selected}
+          onClose={() => setSelected(null)}
+          onShare={seal => setShareSeal(seal)}
+          onConfirm={handleConfirm}
+          onSealUpdate={(id, patch) => {
+            setSeals(p => p.map(s => s.id === id ? { ...s, ...patch } : s));
+            setSelected(s => ({ ...s, ...patch }));
+          }}
+          isDrawer={true}
+        />
       )}
 
       <Nav view={view} setView={setView} certified={certified} role={role} onContribute={onContribute} onDaily={() => setShowDaily(true)} isMobile={isMobile} />
@@ -380,7 +390,16 @@ export default function App() {
                   </div>
                 )}
               </div>
-              <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} onConfirm={handleConfirm} />
+              <SealDetail
+                seal={selected}
+                onClose={() => setSelected(null)}
+                onShare={seal => setShareSeal(seal)}
+                onConfirm={handleConfirm}
+                onSealUpdate={(id, patch) => {
+                  setSeals(p => p.map(s => s.id === id ? { ...s, ...patch } : s));
+                  setSelected(s => ({ ...s, ...patch }));
+                }}
+              />
             </div>
           )
         )}

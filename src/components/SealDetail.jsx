@@ -5,7 +5,7 @@ import ImageGallery from "./ImageGallery";
 import Timeline from "./Timeline";
 import SupplementModal from "./SupplementModal";
 
-export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer = false }) {
+export default function SealDetail({ seal, onClose, onShare, onConfirm, onSealUpdate, isDrawer = false }) {
   const [tab, setTab] = useState("info");
   const [confirming, setConfirming] = useState(false);
   const [showSupplement, setShowSupplement] = useState(false);
@@ -46,7 +46,10 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, isDrawer
         <SupplementModal
           seal={seal}
           onClose={() => setShowSupplement(false)}
-          onSubmit={() => setShowSupplement(false)}
+          onSubmit={(updates) => {
+            if (onSealUpdate) onSealUpdate(seal.id, updates);
+            setShowSupplement(false);
+          }}
         />
       )}
 
