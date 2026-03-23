@@ -252,9 +252,10 @@ export default function ShareModal({ seal, onClose }) {
   const [style, setStyle] = useState("navy");
   const [ratio, setRatio] = useState("1:1");
   const [saving, setSaving] = useState(false);
-  const [imgPosX, setImgPosX] = useState(50); // 0-100
-  const [imgPosY, setImgPosY] = useState(50); // 0-100
+  const [imgPosX, setImgPosX] = useState(50);
+  const [imgPosY, setImgPosY] = useState(50);
 
+  const isMobile = window.innerWidth < 768;
   const cardRef = useRef();
   const imgSrc = seal?.images && seal.images.length > 0 ? seal.images[0] : null;
   const objPos = `${imgPosX}% ${imgPosY}%`;
@@ -295,20 +296,25 @@ export default function ShareModal({ seal, onClose }) {
   if (!seal) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(13,27,42,0.7)", backdropFilter: "blur(8px)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
-      <div style={{ background: "white", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 760, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.2)", maxHeight: "95vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(13,27,42,0.7)", backdropFilter: "blur(8px)", zIndex: 400, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20, overflowY: isMobile ? "hidden" : "auto" }}>
+      <div style={{ background: "white", borderRadius: isMobile ? "16px 16px 0 0" : 16, padding: isMobile ? "20px 16px 28px" : "28px 28px 24px", maxWidth: 760, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.2)", maxHeight: isMobile ? "92vh" : "95vh", overflowY: "auto" }}>
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <div style={{ width: 36, height: 4, background: T.border, borderRadius: 2 }} />
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
-            <h3 style={{ margin: "0 0 3px", fontSize: 16, color: T.ink, fontFamily: "'Noto Serif SC',serif" }}>分享「{seal.name}」</h3>
-            <p style={{ margin: 0, color: T.muted, fontSize: 12 }}>选择风格和比例，保存图片后分享</p>
+            <h3 style={{ margin: "0 0 2px", fontSize: 15, color: T.ink, fontFamily: "'Noto Serif SC',serif" }}>分享「{seal.name}」</h3>
+            <p style={{ margin: 0, color: T.muted, fontSize: 11.5 }}>选择风格和比例，保存图片后分享</p>
           </div>
           <button onClick={onClose} style={{ background: T.bg, border: "none", color: T.muted, width: 30, height: 30, borderRadius: 7, cursor: "pointer", fontSize: 16 }}>×</button>
         </div>
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={{ color: T.faint, fontSize: 11, marginBottom: 8, fontWeight: 600 }}>风格</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)", gap: 6 }}>
             {STYLES.map(s => (
-              <button key={s.id} onClick={() => setStyle(s.id)} style={{ padding: "7px 16px", borderRadius: 8, border: `1.5px solid ${style === s.id ? T.teal : T.border}`, background: style === s.id ? "#F0FDFF" : "white", cursor: "pointer", color: style === s.id ? T.teal : T.body, fontSize: 12.5, fontWeight: style === s.id ? 700 : 400, fontFamily: "inherit" }}>
+              <button key={s.id} onClick={() => setStyle(s.id)} style={{ padding: "8px 12px", borderRadius: 8, border: `1.5px solid ${style === s.id ? T.teal : T.border}`, background: style === s.id ? "#F0FDFF" : "white", cursor: "pointer", color: style === s.id ? T.teal : T.body, fontSize: 12.5, fontWeight: style === s.id ? 700 : 400, fontFamily: "inherit", textAlign: "left" }}>
                 {s.label} <span style={{ color: T.faint, fontSize: 10.5 }}>{s.desc}</span>
               </button>
             ))}
@@ -347,8 +353,16 @@ export default function ShareModal({ seal, onClose }) {
             </div>
           </div>
         )}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 22, background: T.bg, borderRadius: 12, padding: 20, overflow: "auto" }}>
-          <div ref={cardRef} style={{ transform: ratio === "9:16" ? "scale(0.65)" : "scale(0.75)", transformOrigin: "top center", marginBottom: ratio === "9:16" ? "-180px" : "-50px" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16, background: T.bg, borderRadius: 12, padding: isMobile ? 12 : 20, overflow: "hidden" }}>
+          <div ref={cardRef} style={{
+            transform: isMobile
+              ? (ratio === "9:16" ? "scale(0.46)" : "scale(0.55)")
+              : (ratio === "9:16" ? "scale(0.65)" : "scale(0.75)"),
+            transformOrigin: "top center",
+            marginBottom: isMobile
+              ? (ratio === "9:16" ? "-348px" : "-180px")
+              : (ratio === "9:16" ? "-180px" : "-50px")
+          }}>
             <CurrentCard seal={seal} ratio={ratio} imgSrc={imgSrc} objPos={objPos} />
           </div>
         </div>
