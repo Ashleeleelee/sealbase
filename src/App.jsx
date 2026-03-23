@@ -42,6 +42,7 @@ export default function App() {
   const [filterProvince, setFilterProvince] = useState("");
   const [isMobile, setIsMobile]             = useState(() => window.innerWidth < 768);
   const [selectedFacility, setSelectedFacility] = useState(null);
+  const [sortBy, setSortBy] = useState("facility"); // "facility" | "name"
 
   useEffect(() => {
     fetchSeals();
@@ -119,6 +120,14 @@ export default function App() {
     if (filterStatus && s.status !== filterStatus) return false;
     if (filterProvince && s.province !== filterProvince) return false;
     return true;
+  });
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (sortBy === "facility") {
+      const fCmp = (a.facility || "").localeCompare(b.facility || "", "zh-CN");
+      if (fCmp !== 0) return fCmp;
+    }
+    return (a.name || "").localeCompare(b.name || "", "zh-CN");
   });
 
   const hasFilters = filterSex || filterStatus || filterProvince;
@@ -209,8 +218,13 @@ export default function App() {
                   style={{ flex: 1, border: `1.5px solid ${T.border}`, borderRadius: 7, padding: "9px 13px", fontSize: 14, outline: "none", color: T.ink, background: "white", fontFamily: "inherit" }} />
               </div>
               <Filters />
-              <div style={{ color: T.faint, fontSize: 11.5, marginBottom: 10 }}>
-                共 {filtered.length} 条记录{hasFilters ? "（已筛选）" : ""}，点击查看详情
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ color: T.faint, fontSize: 11.5 }}>共 {sortedFiltered.length} 条记录{hasFilters ? "（已筛选）" : ""}</span>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {[["facility", "按园区"],["name", "按名字"]].map(([v, l]) => (
+                    <button key={v} onClick={() => setSortBy(v)} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
+                  ))}
+                </div>
               </div>
               <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
                 {loading ? (
@@ -218,7 +232,7 @@ export default function App() {
                     <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🦭</div>
                     <div style={{ color: T.faint, fontSize: 13 }}>加载中…</div>
                   </div>
-                ) : filtered.length === 0 ? (
+                ) : sortedFiltered.length === 0 ? (
                   <div style={{ padding: "40px 16px", textAlign: "center" }}>
                     <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🦭</div>
                     <div style={{ color: T.body, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
@@ -240,9 +254,9 @@ export default function App() {
                   </div>
                 ) : (
                   <div>
-                    {filtered.map((s, i) => (
+                    {sortedFiltered.map((s, i) => (
                       <div key={s.id}
-                        style={{ padding: "14px 16px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 12, background: selected?.id === s.id ? "#F0FDFF" : "white" }}>
+                        style={{ padding: "14px 16px", borderBottom: i < sortedFiltered.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 12, background: selected?.id === s.id ? "#F0FDFF" : "white" }}>
                         <div onClick={() => setSelected(s)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, cursor: "pointer", minWidth: 0 }}>
                           <div style={{ width: 44, height: 44, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {s.images && Array.isArray(s.images) && s.images[0]?.startsWith("http")
@@ -275,9 +289,12 @@ export default function App() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 12 }}>
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索名称 / 园区 / 城市…"
                     style={{ flex: 1, border: `1.5px solid ${T.border}`, borderRadius: 7, padding: "8px 13px", fontSize: 13, outline: "none", color: T.ink, background: "white", fontFamily: "inherit" }} />
-                  <span style={{ color: T.faint, fontSize: 12, whiteSpace: "nowrap" }}>
-                    {filtered.length} 条{hasFilters ? "（已筛选）" : ""}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                    <span style={{ color: T.faint, fontSize: 12, whiteSpace: "nowrap" }}>{sortedFiltered.length} 条{hasFilters ? "（已筛选）" : ""}</span>
+                    {[["facility","按园区"],["name","按名字"]].map(([v,l]) => (
+                      <button key={v} onClick={() => setSortBy(v)} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
+                    ))}
+                  </div>
                 </div>
                 <Filters />
                 <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
@@ -286,7 +303,7 @@ export default function App() {
                       <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🦭</div>
                       <div style={{ color: T.faint, fontSize: 13 }}>加载中…</div>
                     </div>
-                  ) : filtered.length === 0 ? (
+                  ) : sortedFiltered.length === 0 ? (
                     <div style={{ padding: "56px 24px", textAlign: "center" }}>
                       <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.25 }}>🦭</div>
                       <div style={{ color: T.body, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
@@ -316,7 +333,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filtered.map(s => (
+                        {sortedFiltered.map(s => (
                           <SealRow key={s.id} seal={s}
                             onClick={sel => setSelected(sel === selected ? null : sel)}
                             isSelected={selected?.id === s.id}
