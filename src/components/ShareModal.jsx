@@ -19,7 +19,7 @@ const STATUS_COLOR = {
   "圈养展示": "#0891B2", "救助中·待放归": "#D97706", "已放归": "#059669", "繁育中": "#7C3AED",
 };
 
-function CardNavy({ seal, ratio, imgSrc }) {
+function CardNavy({ seal, ratio, imgSrc, objPos }) {
   const isPortrait = ratio === "9:16";
   const w = isPortrait ? 360 : 400; const h = isPortrait ? 640 : 400;
   const statusColor = STATUS_COLOR[seal.status] || T.teal;
@@ -28,7 +28,7 @@ function CardNavy({ seal, ratio, imgSrc }) {
     <div style={{ width: w, height: h, background: T.navy, borderRadius: 16, overflow: "hidden", position: "relative", fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", flexShrink: 0 }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 80% 20%, rgba(8,145,178,0.15) 0%, transparent 60%)" }} />
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "52%" : "100%", width: isPortrait ? "100%" : "55%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", opacity: 0.85 }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: objPos, opacity: 0.85 }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(8,145,178,0.1)" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", inset: 0, background: isPortrait ? "linear-gradient(to bottom, transparent 50%, rgba(13,27,42,0.95) 100%)" : "linear-gradient(to right, transparent 40%, rgba(13,27,42,0.98) 100%)" }} />
       </div>
@@ -52,7 +52,7 @@ function CardNavy({ seal, ratio, imgSrc }) {
   );
 }
 
-function CardWhite({ seal, ratio, imgSrc }) {
+function CardWhite({ seal, ratio, imgSrc, objPos }) {
   const isPortrait = ratio === "9:16";
   const w = isPortrait ? 360 : 400; const h = isPortrait ? 640 : 400;
   const statusColor = STATUS_COLOR[seal.status] || T.teal;
@@ -60,7 +60,7 @@ function CardWhite({ seal, ratio, imgSrc }) {
   return (
     <div style={{ width: w, height: h, background: "white", borderRadius: 16, overflow: "hidden", position: "relative", fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", border: `1px solid ${T.border}`, flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "55%" : "100%", width: isPortrait ? "100%" : "52%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center" }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: objPos }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F0F9FF" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)" }}>
           <span style={{ color: "white", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em" }}>🦭 SEALBASE</span>
@@ -87,7 +87,7 @@ function CardWhite({ seal, ratio, imgSrc }) {
   );
 }
 
-function CardKraft({ seal, ratio, imgSrc }) {
+function CardKraft({ seal, ratio, imgSrc, objPos }) {
     const isPortrait = ratio === "9:16";
     const w = isPortrait ? 360 : 400; const h = isPortrait ? 640 : 400;
     const illuIdx = ((seal.id || 0) + 2) % 4;
@@ -104,7 +104,7 @@ function CardKraft({ seal, ratio, imgSrc }) {
         {/* 图片区 */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "52%" : "100%", width: isPortrait ? "100%" : "50%" }}>
           {imgSrc
-            ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", filter: "sepia(40%) contrast(0.85) brightness(0.97) saturate(0.8)", opacity: 0.9 }} crossOrigin="anonymous" />
+            ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: objPos, filter: "sepia(40%) contrast(0.85) brightness(0.97) saturate(0.8)", opacity: 0.9 }} crossOrigin="anonymous" />
             : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #E8D090 0%, #D4B870 100%)" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />
           }
           {/* 图片褪色 */}
@@ -201,7 +201,7 @@ function CardKraft({ seal, ratio, imgSrc }) {
   }
 
 
-function CardOcean({ seal, ratio, imgSrc }) {
+function CardOcean({ seal, ratio, imgSrc, objPos }) {
   const isPortrait = ratio === "9:16";
   const w = isPortrait ? 360 : 400; const h = isPortrait ? 640 : 400;
   const illuIdx = ((seal.id || 0) + 3) % 4;
@@ -211,7 +211,7 @@ function CardOcean({ seal, ratio, imgSrc }) {
         <path d="M0 60 Q50 30 100 60 Q150 90 200 60 Q250 30 300 60 Q350 90 400 60 L400 120 L0 120Z" fill="rgba(255,255,255,0.06)" />
       </svg>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: isPortrait ? "48%" : "100%", width: isPortrait ? "100%" : "50%" }}>
-        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "left center", opacity: 0.7, mixBlendMode: "luminosity" }} crossOrigin="anonymous" />
+        {imgSrc ? <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: objPos, opacity: 0.7, mixBlendMode: "luminosity" }} crossOrigin="anonymous" />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} dangerouslySetInnerHTML={{ __html: SEAL_ILLUSTRATIONS[illuIdx] }} />}
         <div style={{ position: "absolute", inset: 0, background: isPortrait ? "linear-gradient(to bottom, rgba(8,145,178,0.3) 0%, rgba(12,74,110,0.75) 100%)" : "linear-gradient(to right, rgba(8,145,178,0.2) 0%, rgba(12,74,110,0.78) 100%)" }} />
       </div>
@@ -252,9 +252,12 @@ export default function ShareModal({ seal, onClose }) {
   const [style, setStyle] = useState("navy");
   const [ratio, setRatio] = useState("1:1");
   const [saving, setSaving] = useState(false);
- 
+  const [imgPosX, setImgPosX] = useState(50); // 0-100
+  const [imgPosY, setImgPosY] = useState(50); // 0-100
+
   const cardRef = useRef();
   const imgSrc = seal?.images && seal.images.length > 0 ? seal.images[0] : null;
+  const objPos = `${imgPosX}% ${imgPosY}%`;
   const CurrentCard = STYLES.find(s => s.id === style)?.Comp || CardNavy;
 
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -321,9 +324,32 @@ export default function ShareModal({ seal, onClose }) {
             ))}
           </div>
         </div>
+        {imgSrc && (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ color: T.faint, fontSize: 11, marginBottom: 8, fontWeight: 600 }}>照片位置</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, background: T.bg, borderRadius: 8, padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: T.muted, fontSize: 11.5, width: 28, flexShrink: 0 }}>左右</span>
+                <input type="range" min={0} max={100} value={imgPosX} onChange={e => setImgPosX(Number(e.target.value))}
+                  style={{ flex: 1, accentColor: T.teal }} />
+                <span style={{ color: T.faint, fontSize: 11, width: 32, textAlign: "right" }}>{imgPosX}%</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: T.muted, fontSize: 11.5, width: 28, flexShrink: 0 }}>上下</span>
+                <input type="range" min={0} max={100} value={imgPosY} onChange={e => setImgPosY(Number(e.target.value))}
+                  style={{ flex: 1, accentColor: T.teal }} />
+                <span style={{ color: T.faint, fontSize: 11, width: 32, textAlign: "right" }}>{imgPosY}%</span>
+              </div>
+              <button onClick={() => { setImgPosX(50); setImgPosY(50); }}
+                style={{ alignSelf: "flex-end", background: "none", border: `1px solid ${T.border}`, borderRadius: 6, padding: "3px 10px", fontSize: 11, color: T.muted, cursor: "pointer", fontFamily: "inherit" }}>
+                重置居中
+              </button>
+            </div>
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 22, background: T.bg, borderRadius: 12, padding: 20, overflow: "auto" }}>
           <div ref={cardRef} style={{ transform: ratio === "9:16" ? "scale(0.65)" : "scale(0.75)", transformOrigin: "top center", marginBottom: ratio === "9:16" ? "-180px" : "-50px" }}>
-            <CurrentCard seal={seal} ratio={ratio} imgSrc={imgSrc} />
+            <CurrentCard seal={seal} ratio={ratio} imgSrc={imgSrc} objPos={objPos} />
           </div>
         </div>
         {previewUrl && (
