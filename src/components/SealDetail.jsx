@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import T from "../utils/tokens";
 import { StatusPill, QualityBadge, FieldRow } from "./Badges";
 import ImageGallery from "./ImageGallery";
@@ -40,19 +41,20 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, onSealUp
     setConfirming(false);
   };
 
+  const supplementPortal = showSupplement && createPortal(
+    <SupplementModal
+      seal={seal}
+      onClose={() => setShowSupplement(false)}
+      onSubmit={(updates) => {
+        if (onSealUpdate) onSealUpdate(seal.id, updates);
+        setShowSupplement(false);
+      }}
+    />,
+    document.body
+  );
+
   const content = (
     <>
-      {showSupplement && (
-        <SupplementModal
-          seal={seal}
-          onClose={() => setShowSupplement(false)}
-          onSubmit={(updates) => {
-            if (onSealUpdate) onSealUpdate(seal.id, updates);
-            setShowSupplement(false);
-          }}
-        />
-      )}
-
       <div style={{ background: T.navy, padding: "18px 22px 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderRadius: isDrawer ? "16px 16px 0 0" : "10px 10px 0 0" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
@@ -152,6 +154,7 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, onSealUp
   if (isDrawer) {
     return (
       <>
+        {supplementPortal}
         <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(13,27,42,0.5)", zIndex: 200 }} />
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "white", borderRadius: "16px 16px 0 0", zIndex: 201, maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 -8px 40px rgba(0,0,0,0.18)", animation: "slideUp 0.28s cubic-bezier(0.32,0.72,0,1)" }}>
           <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
@@ -166,6 +169,7 @@ export default function SealDetail({ seal, onClose, onShare, onConfirm, onSealUp
 
   return (
     <div style={{ background: "white", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
+      {supplementPortal}
       {content}
     </div>
   );
