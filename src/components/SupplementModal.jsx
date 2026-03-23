@@ -13,6 +13,9 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
   const [condition, setCondition] = useState("");
   const [healthDate, setHealthDate] = useState("");
   const [healthNote, setHealthNote] = useState("");
+  const [transferDate, setTransferDate] = useState("");
+  const [toFacility, setToFacility] = useState("");
+  const [transferNote, setTransferNote] = useState("");
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -54,10 +57,9 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
     setUploading(true);
     const imageUrls = await uploadImages();
     const updates = { ...seal };
-
-    // 收集新增时间线条目
     const newEntries = [];
 
+    // 体重/体况
     if (weight || condition || healthNote) {
       const parts = [];
       if (weight) parts.push(`体重 ${weight}kg`);
@@ -69,8 +71,20 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
       });
     }
 
+    // 时间线动态
     if (eventDate && eventText) {
       newEntries.push({ date: eventDate, text: eventText });
+    }
+
+    // 园区变更
+    if (toFacility) {
+      newEntries.push({
+        type: "transfer",
+        date: transferDate || new Date().toISOString().slice(0, 7),
+        fromFacility: seal.facility,
+        toFacility,
+        text: transferNote,
+      });
     }
 
     // 持久化到 Supabase
@@ -82,6 +96,11 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
     if (weight) {
       dbUpdates.weight_kg = parseFloat(weight);
       updates.weight_kg = dbUpdates.weight_kg;
+    }
+    // 园区变更同步更新 facility 字段
+    if (toFacility) {
+      dbUpdates.facility = toFacility;
+      updates.facility = toFacility;
     }
     if (imageUrls.length) {
       dbUpdates.images = [...(seal.images || []), ...imageUrls];
@@ -99,6 +118,7 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
 
   const TABS = [
     { id: "health", label: "⚖ 体重/体况" },
+    { id: "transfer", label: "🏠 园区变更" },
     { id: "timeline", label: "📅 动态" },
     { id: "comment", label: "💬 评论" },
   ];
@@ -125,7 +145,7 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
           }}>
             <div>
               <div style={{ color: T.ink, fontWeight: 700, fontSize: 15 }}>补充 · {seal.name}</div>
-              <div style={{ color: T.faint, fontSize: 11.5, marginTop: 2 }}>记录体重、体况、动态或评论</div>
+              <div style={{ color: T.faint, fontSize: 11.5, marginTop: 2 }}>记录体重、体况、园区变更或动态</div>
             </div>
             <button onClick={onClose} style={{
               background: T.bg, border: `1px solid ${T.border}`,
@@ -135,14 +155,14 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
         </div>
 
         {/* Tab 导航 */}
-        <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, padding: "0 16px", flexShrink: 0 }}>
+        <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, padding: "0 8px", flexShrink: 0, overflowX: "auto" }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               background: "none", border: "none",
-              borderBottom: tab === t.id ? `2px solid ${T.teal}` : "2px solid transparent",
-              padding: "10px 14px 11px", marginBottom: -1,
-              color: tab === t.id ? T.teal : T.muted,
-              fontSize: 12.5, fontWeight: tab === t.id ? 700 : 400,
+              borderBottom: tab === t.id ? `2px solid ${tab === t.id && t.id === "transfer" ? T.amber : T.teal}` : "2px solid transparent",
+              padding: "10px 12px 11px", marginBottom: -1,
+              color: tab === t.id ? (t.id === "transfer" ? T.amber : T.teal) : T.muted,
+              fontSize: 12, fontWeight: tab === t.id ? 700 : 400,
               cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
             }}>{t.label}</button>
           ))}
@@ -204,6 +224,37 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
             </>
           )}
 
+          {/* Tab: 园区变更 */}
+          {tab === "transfer" && (
+            <>
+              <div style={{ background: T.amberPale, border: `1px solid #FDE68A`, borderRadius: 8, padding: "10px 12px" }}>
+                <div style={{ color: "#92400E", fontSize: 12, lineHeight: 1.7 }}>
+                  提交后将同步更新该个体的所属园区，并在历史记录中标注转移事件。
+                </div>
+              </div>
+              <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px" }}>
+                <div style={{ color: T.muted, fontSize: 11.5, marginBottom: 2 }}>当前园区</div>
+                <div style={{ color: T.ink, fontSize: 13.5, fontWeight: 600 }}>{seal.facility}</div>
+              </div>
+              <div>
+                <label style={lbl}>转入新园区 *</label>
+                <input value={toFacility} onChange={e => setToFacility(e.target.value)}
+                  placeholder="新园区全称，如：大连圣亚海洋世界" style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>转移日期</label>
+                <input value={transferDate} onChange={e => setTransferDate(e.target.value)}
+                  placeholder="如：2025-06" style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>备注</label>
+                <textarea value={transferNote} onChange={e => setTransferNote(e.target.value)}
+                  placeholder="如：因馆方合作转移，来源：官方微博公告…"
+                  rows={3} style={{ ...inp, resize: "none" }} />
+              </div>
+            </>
+          )}
+
           {/* Tab: 时间线动态 */}
           {tab === "timeline" && (
             <>
@@ -238,11 +289,18 @@ export default function SupplementModal({ seal, onClose, onSubmit }) {
             </>
           )}
 
-          <button onClick={handleSubmit} disabled={uploading} style={{
-            background: T.teal, border: "none", borderRadius: 10, padding: "13px 0",
-            color: "white", fontSize: 14, fontWeight: 700, cursor: uploading ? "default" : "pointer", fontFamily: "inherit",
-          }}>
-            {uploading ? "上传中…" : "提交"}
+          <button
+            onClick={handleSubmit}
+            disabled={uploading || (tab === "transfer" && !toFacility)}
+            style={{
+              background: tab === "transfer" && !toFacility ? "#FDE68A" : (uploading ? T.bg : T.teal),
+              border: "none", borderRadius: 10, padding: "13px 0",
+              color: tab === "transfer" && !toFacility ? T.amber : "white",
+              fontSize: 14, fontWeight: 700,
+              cursor: uploading || (tab === "transfer" && !toFacility) ? "default" : "pointer",
+              fontFamily: "inherit",
+            }}>
+            {uploading ? "提交中…" : tab === "transfer" ? (toFacility ? `确认转移至 ${toFacility}` : "请填写新园区名称") : "提交"}
           </button>
         </div>
       </div>
