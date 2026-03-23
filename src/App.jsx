@@ -43,6 +43,8 @@ export default function App() {
   const [isMobile, setIsMobile]             = useState(() => window.innerWidth < 768);
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [sortBy, setSortBy] = useState("facility"); // "facility" | "name"
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     fetchSeals();
@@ -130,6 +132,13 @@ export default function App() {
     return (a.name || "").localeCompare(b.name || "", "zh-CN");
   });
 
+  const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedSeals = sortedFiltered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // 筛选/排序变化时回第一页
+  const resetPage = () => setPage(1);
+
   const hasFilters = filterSex || filterStatus || filterProvince;
 
   const facilities = [...new Set(seals.map(s => s.facility))].map(name => ({
@@ -145,27 +154,27 @@ export default function App() {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
       {["雌", "雄"].map(s => (
         <button key={s} style={SEL_STYLE(filterSex === s)}
-          onClick={() => setFilterSex(filterSex === s ? "" : s)}>
+          onClick={() => { setFilterSex(filterSex === s ? "" : s); resetPage(); }}>
           {s === "雌" ? "♀ 雌" : "♂ 雄"}
         </button>
       ))}
       <div style={{ width: 1, background: T.border, margin: "0 2px" }} />
       {["圈养展示", "救助中·待放归", "已放归", "繁育中", "死亡"].map(s => (
         <button key={s} style={SEL_STYLE(filterStatus === s)}
-          onClick={() => setFilterStatus(filterStatus === s ? "" : s)}>
+          onClick={() => { setFilterStatus(filterStatus === s ? "" : s); resetPage(); }}>
           {s}
         </button>
       ))}
       {provinces.length > 0 && <>
         <div style={{ width: 1, background: T.border, margin: "0 2px" }} />
-        <select value={filterProvince} onChange={e => setFilterProvince(e.target.value)}
+        <select value={filterProvince} onChange={e => { setFilterProvince(e.target.value); resetPage(); }}
           style={{ ...SEL_STYLE(!!filterProvince), paddingRight: 24 }}>
           <option value="">全部省份</option>
           {provinces.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </>}
       {hasFilters && (
-        <button onClick={() => { setFilterSex(""); setFilterStatus(""); setFilterProvince(""); }}
+        <button onClick={() => { setFilterSex(""); setFilterStatus(""); setFilterProvince(""); resetPage(); }}
           style={{ ...SEL_STYLE(false), color: T.muted, fontSize: 11.5 }}>
           × 清除筛选
         </button>
@@ -214,7 +223,7 @@ export default function App() {
           isMobile ? (
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索名称 / 园区 / 城市…"
+                <input value={search} onChange={e => { setSearch(e.target.value); resetPage(); }} placeholder="搜索名称 / 园区 / 城市…"
                   style={{ flex: 1, border: `1.5px solid ${T.border}`, borderRadius: 7, padding: "9px 13px", fontSize: 14, outline: "none", color: T.ink, background: "white", fontFamily: "inherit" }} />
               </div>
               <Filters />
@@ -222,7 +231,7 @@ export default function App() {
                 <span style={{ color: T.faint, fontSize: 11.5 }}>共 {sortedFiltered.length} 条记录{hasFilters ? "（已筛选）" : ""}</span>
                 <div style={{ display: "flex", gap: 4 }}>
                   {[["facility", "按园区"],["name", "按名字"]].map(([v, l]) => (
-                    <button key={v} onClick={() => setSortBy(v)} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
+                    <button key={v} onClick={() => { setSortBy(v); resetPage(); }} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
                   ))}
                 </div>
               </div>
@@ -254,9 +263,9 @@ export default function App() {
                   </div>
                 ) : (
                   <div>
-                    {sortedFiltered.map((s, i) => (
+                    {pagedSeals.map((s, i) => (
                       <div key={s.id}
-                        style={{ padding: "14px 16px", borderBottom: i < sortedFiltered.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 12, background: selected?.id === s.id ? "#F0FDFF" : "white" }}>
+                        style={{ padding: "14px 16px", borderBottom: i < pagedSeals.length - 1 ? `1px solid ${T.bg}` : "none", display: "flex", alignItems: "center", gap: 12, background: selected?.id === s.id ? "#F0FDFF" : "white" }}>
                         <div onClick={() => setSelected(s)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, cursor: "pointer", minWidth: 0 }}>
                           <div style={{ width: 44, height: 44, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {s.images && Array.isArray(s.images) && s.images[0]?.startsWith("http")
@@ -282,17 +291,30 @@ export default function App() {
                   </div>
                 )}
               </div>
+              {/* 移动端页码 */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4, marginTop: 14, flexWrap: "wrap" }}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+                    style={{ border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 10px", fontSize: 12, background: "white", color: safePage === 1 ? T.faint : T.body, cursor: safePage === 1 ? "default" : "pointer", fontFamily: "inherit" }}>‹</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                    <button key={n} onClick={() => setPage(n)}
+                      style={{ border: `1.5px solid ${n === safePage ? T.teal : T.border}`, borderRadius: 6, padding: "5px 10px", fontSize: 12, background: n === safePage ? T.teal : "white", color: n === safePage ? "white" : T.body, cursor: "pointer", fontFamily: "inherit", fontWeight: n === safePage ? 700 : 400, minWidth: 32 }}>{n}</button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+                    style={{ border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 10px", fontSize: 12, background: "white", color: safePage === totalPages ? T.faint : T.body, cursor: safePage === totalPages ? "default" : "pointer", fontFamily: "inherit" }}>›</button>
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20, alignItems: "start" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 12 }}>
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索名称 / 园区 / 城市…"
+                  <input value={search} onChange={e => { setSearch(e.target.value); resetPage(); }} placeholder="搜索名称 / 园区 / 城市…"
                     style={{ flex: 1, border: `1.5px solid ${T.border}`, borderRadius: 7, padding: "8px 13px", fontSize: 13, outline: "none", color: T.ink, background: "white", fontFamily: "inherit" }} />
                   <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                     <span style={{ color: T.faint, fontSize: 12, whiteSpace: "nowrap" }}>{sortedFiltered.length} 条{hasFilters ? "（已筛选）" : ""}</span>
                     {[["facility","按园区"],["name","按名字"]].map(([v,l]) => (
-                      <button key={v} onClick={() => setSortBy(v)} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
+                      <button key={v} onClick={() => { setSortBy(v); resetPage(); }} style={{ ...SEL_STYLE(sortBy === v), fontSize: 11, padding: "4px 9px" }}>{l}</button>
                     ))}
                   </div>
                 </div>
@@ -333,7 +355,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {sortedFiltered.map(s => (
+                        {pagedSeals.map(s => (
                           <SealRow key={s.id} seal={s}
                             onClick={sel => setSelected(sel === selected ? null : sel)}
                             isSelected={selected?.id === s.id}
@@ -344,6 +366,19 @@ export default function App() {
                     </table>
                   )}
                 </div>
+                {/* 桌面端页码 */}
+                {totalPages > 1 && (
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4, marginTop: 14, flexWrap: "wrap" }}>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+                      style={{ border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", fontSize: 12.5, background: "white", color: safePage === 1 ? T.faint : T.body, cursor: safePage === 1 ? "default" : "pointer", fontFamily: "inherit" }}>‹ 上一页</button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                      <button key={n} onClick={() => setPage(n)}
+                        style={{ border: `1.5px solid ${n === safePage ? T.teal : T.border}`, borderRadius: 6, padding: "5px 12px", fontSize: 12.5, background: n === safePage ? T.teal : "white", color: n === safePage ? "white" : T.body, cursor: "pointer", fontFamily: "inherit", fontWeight: n === safePage ? 700 : 400, minWidth: 36 }}>{n}</button>
+                    ))}
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+                      style={{ border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", fontSize: 12.5, background: "white", color: safePage === totalPages ? T.faint : T.body, cursor: safePage === totalPages ? "default" : "pointer", fontFamily: "inherit" }}>下一页 ›</button>
+                  </div>
+                )}
               </div>
               <SealDetail seal={selected} onClose={() => setSelected(null)} onShare={seal => setShareSeal(seal)} onConfirm={handleConfirm} />
             </div>
