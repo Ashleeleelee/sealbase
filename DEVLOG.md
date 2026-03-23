@@ -89,6 +89,7 @@ amber=#D97706 amberPale=#FFFBEB
 - [ ] 题库替换为 50 题版本
 - [ ] Supabase 建 moderators 表（结构已设计，暂不实现）
 - [ ] .gitignore 清理 .claude/ 目录
+- [ ] SupplementModal 的「评论」tab 尚未写入数据库（目前只有 timeline/体重/图片/园区变更持久化）
 
 ---
 
@@ -133,6 +134,56 @@ amber=#D97706 amberPale=#FFFBEB
 更新 App.jsx 接入 auth，certified 从 cookie 读取，加 root 隐藏入口
 创建 .env.local 存放 root 密码
 验证 npm run build 通过（89 modules），已推送
+
+### 2026-03-23 当前会话
+
+**实地测试反馈修复与功能完善**
+
+本次会话来自实地使用后的反馈，逐项修复并新增多个功能。
+
+**Bug 修复**
+- 修复 confirmations 不写入数据库：seals 表缺 UPDATE policy，Supabase 静默拒绝写入；用户在控制台手动补加 policy 后解决
+- 修复 root 密码在 HTTP 环境（腾讯云线上）失效：`crypto.subtle` 仅 HTTPS 可用，改为优先用 `crypto.subtle`，不可用时回退纯 JS SHA-256 实现
+- 修复 SupplementModal 的体重/动态/图片未持久化：之前只更新内存 state，现在统一 `supabase.update()` 写回数据库
+- 修复 timeline 字段不存在：Supabase seals 表新增 `timeline jsonb` 字段后接入
+
+**新增字段（Supabase）**
+- `seals.birth_year int2`：估计出生年份，详情页自动推算「约 N 岁（YYYY 年生）」
+- `seals.weight_kg numeric`：当前体重，补充体重时同步更新
+- `seals.timeline jsonb`：时间线动态数组，持久化存储
+
+**ContributeModal 改动**
+- 园区名输入框新增联想（从已有数据提取已有园区名）
+- 必填项调整：名称 + 至少一张图片为必填；来源改为选填；提交按钮上方显示缺哪项的明确提示
+- 状态新增「死亡」，选择后联动显示死亡日期/原因字段
+- 新增「估计出生年份」和「当前体重」两个选填字段
+
+**SupplementModal 重构**
+- 改为 tab 结构：⚖ 体重/体况 / 🏠 园区变更 / 📅 动态 / 💬 评论
+- 体重/体况 tab：填写后同时写入 timeline 和 weight_kg
+- 园区变更 tab：填写新园区后同步更新 `facility` 字段，timeline 写入特殊 `type: "transfer"` 记录
+- 图片上传补全持久化（之前是占位未实现）
+
+**SealDetail 改动**
+- 档案区下方增加醒目的「⚖️ 补充体重 / 体况 / 动态」入口按钮（之前入口缺失，用户找不到）
+- 估计年龄从 `birth_year` 动态推算，体重显示 `weight_kg`
+
+**Timeline 组件改动**
+- 新增 `type: "transfer"` 特殊渲染：琥珀色方块节点、橙色背景卡片、显示「旧园区 → 新园区」
+- 普通动态保持原有圆点样式
+
+**statusConfig.js**
+- 新增「死亡」状态样式（灰色，与其他状态区分）
+
+**列表排序与翻页**
+- 新增排序切换：「按园区」（默认，同园区聚合后按拼音）/ 「按名字」（全量拼音排序）
+- 新增翻页：每页 20 条，底部显示页码索引（ ‹ 1 | 2 | 3 › ），筛选/排序/搜索变化自动回第一页
+
+**管理员后台（上次会话遗留）**
+- Nav 显示红色「🔐 管理员模式」标识
+- view="admin" 管理后台：待审核 / 存疑记录 / 操作日志三个 tab
+- 每次操作写入 `admin_logs` 表（before/after jsonb），支持撤回
+- root 密码改为 SHA-256 哈希存储
 
 ### 2026-03-12 当前会话
 **MCP Shell 排查与修复**
